@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Month {
+  id          Int     @id
+  title       String
+  description String
+  weeks       Week[]
+}
+
+model Week {
+  id      Int     @id @default(autoincrement())
+  monthId Int
+  weekNum Int
+  title   String
+  month   Month   @relation(fields: [monthId], references: [id])
+  topics  Topic[]
+
+  @@unique([monthId, weekNum])
+}
+
+enum TopicType {
+  READ
+  BUILD
+  EXERCISE
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  QUIZ_PENDING
+  COMPLETED
+}
+
+model Topic {
+  id          Int           @id @default(autoincrement())
+  weekId      Int
+  sortOrder   Int
+  title       String
+  type        TopicType
+  content     String
+  resources   String[]
+  week        Week          @relation(fields: [weekId], references: [id])
+  progress    TopicProgress?
+  quizAttempts QuizAttempt[]
+  chatMessages ChatMessage[]
+
+  @@unique([weekId, sortOrder])
+}
+
+model TopicProgress {
+  id        Int            @id @default(autoincrement())
+  topicId   Int            @unique
+  status    ProgressStatus @default(NOT_STARTED)
+  startedAt DateTime?
+  completedAt DateTime?
+  topic     Topic          @relation(fields: [topicId], references: [id])
+}
+
+model QuizAttempt {
+  id        Int      @id @default(autoincrement())
+  topicId   Int
+  score     Float
+  passed    Boolean
+  answers   Json
+  createdAt DateTime @default(now())
+  topic     Topic    @relation(fields: [topicId], references: [id])
+}
+
+enum ChatMode {
+  LESSON
+  QUIZ
+  CODE_REVIEW
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  topicId   Int?
+  mode      ChatMode
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+  topic     Topic?   @relation(fields: [topicId], references: [id])
+}
+
+model StudySession {
+  id        Int      @id @default(autoincrement())
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  totalMinutes Int   @default(0)
+}
