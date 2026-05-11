@@ -9,8 +9,6 @@ export async function startTopic(topicId: number) {
     update: { status: "IN_PROGRESS", startedAt: new Date() },
     create: { topicId, status: "IN_PROGRESS", startedAt: new Date() },
   });
-  revalidatePath("/");
-  revalidatePath(`/lesson/${topicId}`);
 }
 
 export async function completeTopic(topicId: number) {
