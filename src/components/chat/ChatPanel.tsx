@@ -5,11 +5,19 @@ import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { MessageBubble } from "./MessageBubble";
 import { Button } from "@/components/ui/Button";
+import type { Rating } from "@/actions/feedback";
+
+interface InitialMessage {
+  externalId: string;
+  role: "user" | "assistant";
+  content: string;
+  rating?: Rating | null;
+}
 
 interface ChatPanelProps {
   topicId: number | null;
   mode: "LESSON" | "QUIZ" | "CODE_REVIEW";
-  initialMessages?: { role: "user" | "assistant"; content: string }[];
+  initialMessages?: InitialMessage[];
   onQuizComplete?: (result: {
     passed: boolean;
     score: number;
@@ -43,12 +51,20 @@ export function ChatPanel({
     [topicId, mode]
   );
 
+  const initialRatings = useMemo(() => {
+    const map = new Map<string, Rating | null>();
+    for (const m of initialMessages) {
+      map.set(m.externalId, m.rating ?? null);
+    }
+    return map;
+  }, [initialMessages]);
+
   const { messages, sendMessage, setMessages, status, error } = useChat({
     id: `${mode}-${topicId ?? "general"}`,
     transport,
-    messages: initialMessages.map((m, i) => ({
-      id: String(i),
-      role: m.role as "user" | "assistant",
+    messages: initialMessages.map((m) => ({
+      id: m.externalId,
+      role: m.role,
       parts: [{ type: "text" as const, text: m.content }],
     })),
     onFinish(event) {
@@ -127,6 +143,8 @@ export function ChatPanel({
             key={msg.id}
             role={msg.role as "user" | "assistant"}
             content={getMessageText(msg)}
+            messageId={msg.id}
+            initialRating={initialRatings.get(msg.id) ?? null}
           />
         ))}
         {isLoading && messages[messages.length - 1]?.role !== "assistant" && (

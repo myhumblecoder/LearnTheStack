@@ -3,6 +3,7 @@ import { getTopic } from "@/lib/curriculum/queries";
 import { saveChatMessage } from "@/lib/curriculum/queries";
 import { prisma } from "@/lib/db";
 import { convertToModelMessages, type UIMessage } from "ai";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(req: Request) {
   try {
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
           mode,
           role: "user",
           content: textPart.text,
+          externalId: lastMsg.id,
         });
       }
     }
@@ -89,6 +91,9 @@ export async function POST(req: Request) {
       topicContext,
     });
 
+    // Pre-generate the assistant message id so the client and DB agree.
+    const assistantExternalId = uuidv4();
+
     // Save assistant response after streaming (fire-and-forget)
     result.text.then(async (text: string) => {
       await saveChatMessage({
@@ -96,10 +101,13 @@ export async function POST(req: Request) {
         mode,
         role: "assistant",
         content: text,
+        externalId: assistantExternalId,
       });
     });
 
-    return result.toUIMessageStreamResponse();
+    return result.toUIMessageStreamResponse({
+      generateMessageId: () => assistantExternalId,
+    });
   } catch (error) {
     console.error("Chat API error:", error);
     return new Response(

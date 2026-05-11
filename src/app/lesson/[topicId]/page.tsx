@@ -46,8 +46,10 @@ export default async function LessonPage({
 
   const messages = await getChatMessages(topicId, "LESSON");
   const initialMessages = messages.map((m) => ({
+    externalId: m.externalId,
     role: m.role as "user" | "assistant",
     content: m.content,
+    rating: m.feedback?.rating ?? null,
   }));
 
   return (

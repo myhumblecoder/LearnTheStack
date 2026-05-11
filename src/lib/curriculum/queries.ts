@@ -44,6 +44,7 @@ export async function getChatMessages(topicId: number | null, mode: string) {
   return prisma.chatMessage.findMany({
     where: { topicId, mode: mode as "LESSON" | "QUIZ" | "CODE_REVIEW" },
     orderBy: { createdAt: "asc" },
+    include: { feedback: true },
   });
 }
 
@@ -52,6 +53,7 @@ export async function saveChatMessage(data: {
   mode: "LESSON" | "QUIZ" | "CODE_REVIEW";
   role: string;
   content: string;
+  externalId?: string;
 }) {
   return prisma.chatMessage.create({ data });
 }

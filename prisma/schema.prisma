@@ -79,14 +79,31 @@ enum ChatMode {
   CODE_REVIEW
 }
 
+enum FeedbackRating {
+  UP
+  DOWN
+}
+
 model ChatMessage {
-  id        Int      @id @default(autoincrement())
-  topicId   Int?
-  mode      ChatMode
-  role      String
-  content   String
-  createdAt DateTime @default(now())
-  topic     Topic?   @relation(fields: [topicId], references: [id])
+  id         Int              @id @default(autoincrement())
+  externalId String           @unique @default(dbgenerated("gen_random_uuid()::text"))
+  topicId    Int?
+  mode       ChatMode
+  role       String
+  content    String
+  createdAt  DateTime         @default(now())
+  topic      Topic?           @relation(fields: [topicId], references: [id])
+  feedback   MessageFeedback?
+}
+
+model MessageFeedback {
+  id        Int            @id @default(autoincrement())
+  messageId Int            @unique
+  rating    FeedbackRating
+  reason    String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  message   ChatMessage    @relation(fields: [messageId], references: [id], onDelete: Cascade)
 }
 
 model StudySession {
