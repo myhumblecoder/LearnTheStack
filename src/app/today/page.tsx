@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { TopicRow } from "@/components/schedule/TopicRow";
+import { DueReviews } from "@/components/schedule/DueReviews";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +58,8 @@ export default async function TodayPage() {
           </p>
         )}
       </div>
+
+      <DueReviews />
 
       {topics.length === 0 ? (
         <Card className="text-center py-12 border-green-800 bg-green-950/20">

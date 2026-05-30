@@ -86,12 +86,14 @@ model Resource {
 }
 
 model TopicProgress {
-  id          Int            @id @default(autoincrement())
-  topicId     Int            @unique
-  status      ProgressStatus @default(NOT_STARTED)
-  startedAt   DateTime?
-  completedAt DateTime?
-  topic       Topic          @relation(fields: [topicId], references: [id])
+  id           Int            @id @default(autoincrement())
+  topicId      Int            @unique
+  status       ProgressStatus @default(NOT_STARTED)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  reviewStage  Int            @default(0)
+  nextReviewAt DateTime?      @db.Date
+  topic        Topic          @relation(fields: [topicId], references: [id])
 }
 
 model QuizAttempt {
