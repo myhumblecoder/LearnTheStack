@@ -94,6 +94,13 @@ const skiena = (chapters: string): ResourceSeed => ({
   source: "Steven Skiena · 3rd ed. (2020)",
 });
 
+// BUILD topics: study how this study-assistant app implements the pattern,
+// then build your own version in a practice project (you use the app to
+// learn the stack; you don't build the assistant itself).
+function refPractice(reference: string, practice: string): string {
+  return `Reference — see how this study-assistant app does it: ${reference} Your practice — ${practice}`;
+}
+
 // A standard monthly DSA topic, parameterised by focus and its Skiena chapters.
 function dsaTopic(
   focus: string,
@@ -111,8 +118,9 @@ function dsaTopic(
 
 // ---------------------------------------------------------------------------
 // The 9-month extended curriculum (Jun 2026 → Feb 2027)
-// Domain note: the "build" tasks extend THIS study-tracker app
-// (Month → Week → Topic), which is the real domain you learn on.
+// Domain note: BUILD tasks use THIS study-assistant app as a worked
+// reference (Month → Week → Topic), then have the learner build their
+// own practice version — the learner uses the app, they don't build it.
 // ---------------------------------------------------------------------------
 const curriculum: MonthSeed[] = [
   {
@@ -181,10 +189,12 @@ const curriculum: MonthSeed[] = [
             resources: [VID.claudeCode()],
           },
           {
-            title: "Add a Server Action to this app",
+            title: "Server Actions: read then build your own",
             type: "BUILD",
-            content:
-              "Extend the app: add a Server Action (e.g. mark a topic complete from the dashboard, or add a study note). Practice revalidation, pending states, and error handling.",
+            content: refPractice(
+              "this app's src/actions (progress.ts, session.ts, feedback.ts) define async server functions with revalidation and error handling.",
+              "in a scratch Next.js project, write your own Server Action (e.g. a todo toggle) and practice revalidation, pending states, and error handling."
+            ),
             resources: [],
           },
         ],
@@ -223,8 +233,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Type the action layer with generics",
             type: "BUILD",
-            content:
-              "Write a Result<T, E> type and use it as the return contract for this app's Server Actions. Practice discriminated unions and exhaustive checking.",
+            content: refPractice(
+              "this app's Server Actions in src/actions use typed return contracts so callers get exhaustive results.",
+              "in your practice project, write a Result<T, E> type, use it as the return contract for your own actions, and practice discriminated unions and exhaustive checking."
+            ),
             resources: [],
           },
         ],
@@ -243,8 +255,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Validate action inputs with Zod",
             type: "BUILD",
-            content:
-              "Add Zod schemas to this app's Server Action inputs and infer the TS types with z.infer<>. Add .refine() validation to at least two fields.",
+            content: refPractice(
+              "this app validates Server Action and AI inputs with Zod schemas (see src/lib/ai/schemas.ts) and infers TS types from them.",
+              "in your practice project, add Zod schemas to your own action inputs, infer types with z.infer<>, and add .refine() validation to at least two fields."
+            ),
             resources: [],
           },
           {
@@ -300,8 +314,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Extend the schema with a real migration",
             type: "BUILD",
-            content:
-              "Add a feature to this app's schema (e.g. a StudyNote model, or tags on Topic). Run a migration with `npm run db:migrate` and verify in Prisma Studio.",
+            content: refPractice(
+              "this app's prisma/schema.prisma models Month → Week → Topic and evolves via Prisma migrations.",
+              "in your practice project, add a model (e.g. a Note or Tag), run a migration with prisma migrate dev, and verify it in Prisma Studio."
+            ),
             resources: [],
           },
           dsaTopic(
@@ -340,10 +356,12 @@ const curriculum: MonthSeed[] = [
             ],
           },
           {
-            title: "Add a typed query to this app",
+            title: "Typed Prisma queries in practice",
             type: "BUILD",
-            content:
-              "Write a new query in queries.ts (e.g. study minutes per week, or topics-by-track) and surface it in the dashboard. Let the select drive the type.",
+            content: refPractice(
+              "this app's src/lib/curriculum/queries.ts lets the Prisma select narrow return types with no manual typing.",
+              "in your practice project, write a query whose shape comes from its select (e.g. an aggregate or grouped read) and surface it in a page."
+            ),
             resources: [],
           },
         ],
@@ -377,10 +395,12 @@ const curriculum: MonthSeed[] = [
             ],
           },
           {
-            title: "Move this app from local Postgres to Neon",
+            title: "Postgres → Neon (your own branch)",
             type: "BUILD",
-            content:
-              "Migrate from the local docker Postgres to a Neon branch. Configure pooled vs direct URLs and set up dev + prod branches.",
+            content: refPractice(
+              "study how this app is configured against Neon with pooled vs direct connection URLs.",
+              "on your own Neon account, move a practice project from local Postgres to a Neon branch and set up dev + prod branches with pooled vs direct URLs."
+            ),
             resources: [],
           },
         ],
@@ -404,8 +424,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Add a transactional + raw-SQL operation",
             type: "BUILD",
-            content:
-              "Wrap a multi-step write in a transaction (e.g. complete topic + record a study session atomically). Add one raw SQL aggregate for a reporting stat.",
+            content: refPractice(
+              "this app performs multi-step writes through Prisma and lets select-driven types flow upstream.",
+              "in your practice project, wrap a multi-step write in a transaction (e.g. two related inserts atomically) and add one raw SQL aggregate for a reporting stat."
+            ),
             resources: [],
           },
         ],
@@ -480,10 +502,12 @@ const curriculum: MonthSeed[] = [
             ],
           },
           {
-            title: "Give the tutor Prisma-backed tools",
+            title: "Tool-calling: data-backed tools",
             type: "BUILD",
-            content:
-              "Define tools backed by this app's queries (e.g. markTopicComplete, listUpcomingTopics, logStudySession) so the tutor can act on your schedule, not just talk.",
+            content: refPractice(
+              "study how this app's tutor (src/lib/ai/tutor.ts) exposes Prisma-backed tools so it can act on data, not just talk.",
+              "in your practice project, define AI SDK tools backed by your own queries (e.g. a list and a mutate tool) and let the model call them in a loop."
+            ),
             resources: [],
           },
         ],
@@ -505,10 +529,12 @@ const curriculum: MonthSeed[] = [
             ],
           },
           {
-            title: "Generate a structured study plan adjustment",
+            title: "Structured outputs with generateObject",
             type: "BUILD",
-            content:
-              "Use generateObject + a Zod schema so the tutor can propose a structured re-plan (e.g. reschedule missed topics) that writes straight to the DB.",
+            content: refPractice(
+              "study how this app uses generateObject with a Zod schema to produce structured results (e.g. quizzes) that write to the DB.",
+              "in your practice project, use generateObject + a Zod schema so the model returns a typed object you can persist directly."
+            ),
             resources: [],
           },
         ],
@@ -525,10 +551,12 @@ const curriculum: MonthSeed[] = [
             resources: [doc("AI SDK — Chatbot", "https://sdk.vercel.ai/docs/ai-sdk-ui/chatbot")],
           },
           {
-            title: "Stream tool-call progress in the UI",
+            title: "Streaming tool-call progress",
             type: "BUILD",
-            content:
-              "Show each tool firing in real time (\"Rescheduling 2 topics…\") instead of only the final answer.",
+            content: refPractice(
+              "study how this app streams tutor responses (api/chat/route.ts) and renders them in ChatPanel/MessageBubble.",
+              "in your practice project, stream tool-call progress so each tool firing shows in real time instead of only the final answer."
+            ),
             resources: [],
           },
         ],
@@ -656,10 +684,12 @@ const curriculum: MonthSeed[] = [
             resources: [doc("tRPC — Next.js", "https://trpc.io/docs/client/nextjs/setup")],
           },
           {
-            title: "Move read queries into tRPC procedures",
+            title: "tRPC procedures in practice",
             type: "BUILD",
-            content:
-              "Add tRPC to this app and move the curriculum read queries into procedures. Watch the type flow Prisma → tRPC → client with zero casting.",
+            content: refPractice(
+              "study how this app's read queries in src/lib/curriculum/queries.ts can be exposed as typed procedures.",
+              "in your practice project, add tRPC, move some read queries into procedures, and watch the type flow Prisma → tRPC → client with zero casting."
+            ),
             resources: [],
           },
           dsaTopic(
@@ -683,8 +713,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Add logging + input validation middleware",
             type: "BUILD",
-            content:
-              "Add Zod .input() validation to mutating procedures and a middleware that logs every call with timing.",
+            content: refPractice(
+              "study how this app validates inputs with Zod and could chain reusable procedure middleware.",
+              "in your practice project, add Zod .input() validation to mutating procedures and a middleware that logs every call with timing."
+            ),
             resources: [],
           },
         ],
@@ -705,8 +737,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Cache a hot read in Redis",
             type: "BUILD",
-            content:
-              "Cache the curriculum/dashboard read in Redis with a short TTL; invalidate on mutation. Measure and log the latency delta.",
+            content: refPractice(
+              "study how this app would cache a hot curriculum/dashboard read in Upstash Redis and invalidate it on mutation.",
+              "on your own Upstash account, cache a hot read in your practice project with a short TTL, invalidate on mutation, and measure the latency delta."
+            ),
             resources: [],
           },
         ],
@@ -730,8 +764,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Rate-limit the tutor endpoint",
             type: "BUILD",
-            content:
-              "Apply a sliding-window limit to this app's /api/chat endpoint (e.g. 20 req/min) and surface a typed error gracefully in the UI.",
+            content: refPractice(
+              "study how this app's /api/chat endpoint can be protected with an Upstash sliding-window rate limit.",
+              "on your own Upstash account, apply a sliding-window limit to a practice endpoint (e.g. 20 req/min) and surface a typed error gracefully in the UI."
+            ),
             resources: [],
           },
         ],
@@ -754,14 +790,16 @@ const curriculum: MonthSeed[] = [
             title: "Write a BMad Feature Spec",
             type: "EXERCISE",
             content:
-              "Write a full BMad spec (.md) for a new feature of this app — e.g. a 'weekly review' assistant — defining problem, solution, data model changes, and API surface before any code.",
+              "Write a full BMad spec (.md) for a feature of your own practice project — e.g. a 'weekly review' assistant — defining problem, solution, data model changes, and API surface before any code.",
             resources: [],
           },
           {
             title: "Derive Code from the Spec",
             type: "BUILD",
-            content:
-              "Derive Zod schemas, Prisma models, and tRPC signatures directly from the spec. The spec is the source of truth.",
+            content: refPractice(
+              "this app is docs-first: its Zod schemas, Prisma models, and procedure signatures derive from specs, not the other way around.",
+              "in your practice project, derive Zod schemas, Prisma models, and tRPC signatures directly from your own spec, treating the spec as the source of truth."
+            ),
             resources: [],
           },
           dsaTopic(
@@ -791,8 +829,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Build Planner/Executor agents",
             type: "BUILD",
-            content:
-              "Split the tutor into a Planner (interprets intent → structured plan) and an Executor (calls tools). Wire Planner output into Executor input.",
+            content: refPractice(
+              "study how this app's tutor (src/lib/ai/tutor.ts) splits into a Planner that interprets intent into a structured plan and an Executor that calls tools.",
+              "in your practice project, build a Planner/Executor pair and wire the Planner's structured output into the Executor's input."
+            ),
             resources: [],
           },
         ],
@@ -816,8 +856,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Add session memory in Redis",
             type: "BUILD",
-            content:
-              "Store tutor conversation history in Redis keyed by session; summarise older turns before injecting. The tutor should remember earlier discussion.",
+            content: refPractice(
+              "study how this app keeps tutor conversation history in Upstash Redis keyed by session and summarises older turns to stay within token limits.",
+              "on your own Upstash account, store a practice chat's history in Redis by session, summarise older turns before injecting, and confirm it remembers earlier discussion."
+            ),
             resources: [],
           },
         ],
@@ -841,8 +883,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Type and version the prompt templates",
             type: "BUILD",
-            content:
-              "Refactor this app's src/lib/ai/prompts.ts into typed PromptTemplate functions taking context params; version them alongside the features they serve.",
+            content: refPractice(
+              "study how this app's src/lib/ai/prompts.ts expresses prompts as typed PromptTemplate functions, versioned alongside the features they serve.",
+              "in your practice project, refactor your prompts into typed PromptTemplate functions taking context params and version them alongside their features."
+            ),
             resources: [],
           },
         ],
@@ -917,10 +961,12 @@ const curriculum: MonthSeed[] = [
             ],
           },
           {
-            title: "Deploy this app to Vercel",
+            title: "Deploy your own app to Vercel",
             type: "BUILD",
-            content:
-              "Deploy with three environments wired to separate Neon branches and Upstash instances. Preview deploys auto-wire to the dev Neon branch.",
+            content: refPractice(
+              "study how this app maps Vercel environments (preview/prod) to separate Neon branches and Upstash instances.",
+              "on your own Vercel/Neon/Upstash accounts, deploy your practice project with three environments wired to separate Neon branches, with preview deploys auto-wiring to the dev branch."
+            ),
             resources: [],
           },
           dsaTopic(
@@ -949,8 +995,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Build the CI pipeline",
             type: "BUILD",
-            content:
-              "CI on every PR: tsc --noEmit, ESLint, prisma migrate diff, and the test suite. Block merges to main on failure.",
+            content: refPractice(
+              "study how this app's pipeline gates merges on tsc --noEmit, ESLint, prisma migrate diff, and tests.",
+              "in your own practice repo, build a GitHub Actions pipeline that runs those same checks on every PR and blocks merges to main on failure."
+            ),
             resources: [],
           },
         ],
@@ -970,10 +1018,12 @@ const curriculum: MonthSeed[] = [
             ],
           },
           {
-            title: "Test this app",
+            title: "Unit + e2e testing in practice",
             type: "BUILD",
-            content:
-              "Unit-test the tRPC procedures (mock Prisma) and write two Playwright e2e tests: completing a topic, and a tutor tool-use flow.",
+            content: refPractice(
+              "study how this app's tRPC procedures and tutor flows would be covered by Vitest unit tests (mocking Prisma) and Playwright e2e tests.",
+              "in your practice project, unit-test your procedures with a mocked Prisma and write two Playwright e2e tests covering a mutation and a tool-use flow."
+            ),
             resources: [],
           },
         ],
@@ -998,8 +1048,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "Instrument the critical path",
             type: "BUILD",
-            content:
-              "Add structured logging to procedures and tool calls, trace one critical path with OpenTelemetry, and wire Sentry to the Next.js error boundary.",
+            content: refPractice(
+              "study how this app could add structured logging to its procedures and tool calls and trace a critical path with OpenTelemetry.",
+              "in your practice project, add structured logging to procedures and tool calls, trace one critical path with OpenTelemetry, and wire Sentry to the Next.js error boundary."
+            ),
             resources: [],
           },
         ],
@@ -1021,8 +1073,10 @@ const curriculum: MonthSeed[] = [
           {
             title: "README, architecture diagram, demo",
             type: "BUILD",
-            content:
-              "Write a strong README, draw the four-layer architecture diagram, and record a short demo. This is your portfolio piece — make it presentable.",
+            content: refPractice(
+              "study how this app's four-layer architecture (UI → Agent → API → Data) is structured as a model for documenting a full-stack app.",
+              "for your own practice project, write a strong README, draw the four-layer architecture diagram, and record a short demo — make this portfolio piece presentable."
+            ),
             resources: [],
           },
           dsaTopic(
@@ -1040,7 +1094,7 @@ const curriculum: MonthSeed[] = [
             title: "Write a retrospective",
             type: "EXERCISE",
             content:
-              "Write a retro .md: what stuck, what you'd relearn, what's next. Celebrate — you shipped a full-stack AI app, earned AI-900, and built DSA fundamentals while raising three kids.",
+              "Write a retro .md on the 9-month learning journey: what stuck, what you'd relearn, what's next. Celebrate — you learned the full-stack TypeScript stack using your AI study assistant, earned AI-900, and built DSA fundamentals while raising three kids.",
             resources: [],
           },
         ],
