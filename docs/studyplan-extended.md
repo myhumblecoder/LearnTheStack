@@ -51,15 +51,15 @@ Vitest, Playwright. Plus [Microsoft Learn — AI-900](https://learn.microsoft.co
 
 | Book | Author | Access | Used in |
 |---|---|---|---|
-| The Algorithm Design Manual | Steven Skiena | Owned | DSA track — chapters mapped per month |
+| The Algorithm Design Manual (3rd ed., 2020) | Steven Skiena | Owned | DSA track — chapters mapped per month |
 | Programming TypeScript | Boris Cherny | O'Reilly Learning | Jun (M1) — TS at depth |
 | Designing Data-Intensive Applications | Martin Kleppmann | O'Reilly Learning | Jul (M2) — data layer |
 | AI Engineering | Chip Huyen | O'Reilly Learning | Aug (M3) — agent layer |
 
 You have an **O'Reilly Learning** subscription, so any title above (or another that fits a
 month) is available on demand. **Skiena** is the spine of the DSA track — each monthly `DSA:`
-topic in the app cites the relevant Skiena chapters (e.g. ch. 4 for sorting/searching, ch. 10
-for dynamic programming).
+topic in the app cites the relevant Skiena chapters (3rd ed.; e.g. ch. 7 for graph traversal,
+ch. 10 for dynamic programming).
 
 ---
 

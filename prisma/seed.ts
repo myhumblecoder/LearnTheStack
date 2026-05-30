@@ -91,7 +91,7 @@ const oreilly = (title: string, author: string): ResourceSeed => ({
 const skiena = (chapters: string): ResourceSeed => ({
   type: "TEXTBOOK",
   label: `The Algorithm Design Manual — ${chapters}`,
-  source: "Steven Skiena",
+  source: "Steven Skiena · 3rd ed. (2020)",
 });
 
 // A standard monthly DSA topic, parameterised by focus and its Skiena chapters.
@@ -257,7 +257,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Big-O, arrays, strings, hash maps",
             "Start with Big-O intuition, then array/string traversal and hash-map lookups.",
-            "ch. 1–2 (intro & algorithm analysis), 3.7 (hashing)"
+            "ch. 1–2 (intro & algorithm analysis), 6 (hashing)"
           ),
         ],
       },
@@ -307,7 +307,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Two pointers, sliding window",
             "Classic patterns for array/string subranges.",
-            "ch. 3 (data structures), 4.x (arrays)"
+            "ch. 3 (data structures — arrays & sequences)"
           ),
         ],
       },
@@ -449,7 +449,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Stacks, queues, linked lists",
             "Pointer manipulation and LIFO/FIFO structures.",
-            "ch. 3.1–3.2 (stacks, queues, linked lists)"
+            "ch. 3 (data structures — stacks, queues, linked lists)"
           ),
         ],
       },
@@ -564,7 +564,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Recursion (light — cert month)",
             "Keep it light this month; just recursion intuition and a couple of problems.",
-            "ch. 5.1–5.3 (recursion & backtracking)"
+            "ch. 5 (divide & conquer) & 9 (combinatorial search — backtracking)"
           ),
         ],
       },
@@ -665,7 +665,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Trees + binary search trees",
             "Tree traversal (in/pre/post-order) and BST operations.",
-            "ch. 3.4–3.5 (binary search trees)"
+            "ch. 3 (data structures — binary search trees)"
           ),
         ],
       },
@@ -767,7 +767,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Graphs, BFS/DFS",
             "Adjacency lists, breadth-first and depth-first traversal.",
-            "ch. 5.6–5.10 (graph traversal: BFS/DFS)"
+            "ch. 7 (graph traversal — BFS/DFS) & 8 (weighted graphs)"
           ),
         ],
       },
@@ -872,7 +872,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Dynamic programming (intro) + spaced review",
             "Gentle DP intro (memoisation) plus a light review pass over earlier topics.",
-            "ch. 10.1–10.2 (dynamic programming intro)"
+            "ch. 10 (dynamic programming — intro)"
           ),
         ],
       },
@@ -926,7 +926,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "Sorting + searching",
             "Merge/quick sort intuition and binary search variants.",
-            "ch. 4 (sorting & searching)"
+            "ch. 4 (sorting & binary search)"
           ),
         ],
       },
@@ -1028,7 +1028,7 @@ const curriculum: MonthSeed[] = [
           dsaTopic(
             "DP consolidation + full review",
             "Consolidate dynamic programming and do a spaced review across every earlier topic.",
-            "ch. 10 (dynamic programming) + Part II catalog"
+            "ch. 10 (dynamic programming) + Part II catalog (ch. 13–22)"
           ),
         ],
       },
