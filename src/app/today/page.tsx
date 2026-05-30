@@ -5,11 +5,12 @@ import {
   todayUtc,
   formatUtc,
   sameUtcDay,
+  monthLabel,
 } from "@/lib/curriculum/schedule";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { TopicRow, type TopicRowData } from "@/components/schedule/TopicRow";
+import { TopicRow } from "@/components/schedule/TopicRow";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,7 @@ export default async function TodayPage() {
         </div>
         {context && (
           <p className="text-sm text-zinc-500">
-            Month {context.month.id}: {context.month.title} · Week{" "}
+            {monthLabel(context.month)}: {context.month.title} · Week{" "}
             {context.weekNum} — {context.title}
           </p>
         )}
@@ -93,7 +94,7 @@ export default async function TodayPage() {
 
           <div className="space-y-2">
             {topics.map((t) => (
-              <TopicRow key={t.id} topic={t as unknown as TopicRowData} />
+              <TopicRow key={t.id} topic={t} />
             ))}
           </div>
 

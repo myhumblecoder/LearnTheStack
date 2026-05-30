@@ -1,6 +1,9 @@
 import Link from "next/link";
 import {
   getWeekForDate,
+  getPrevWeekStart,
+  getNextWeekStart,
+  monthLabel,
   todayUtc,
   startOfUtcDay,
   addDays,
@@ -10,7 +13,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { TopicRow, type TopicRowData } from "@/components/schedule/TopicRow";
+import { TopicRow } from "@/components/schedule/TopicRow";
 
 export const dynamic = "force-dynamic";
 
@@ -65,8 +68,8 @@ export default async function WeekPage({
     (t) => t.progress?.status === "COMPLETED"
   ).length;
 
-  const prevDate = iso(addDays(start, -1));
-  const nextDate = iso(addDays(end, 1));
+  const prevStart = await getPrevWeekStart(week.startDate);
+  const nextStart = await getNextWeekStart(week.startDate);
 
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-6">
@@ -84,20 +87,32 @@ export default async function WeekPage({
             </Badge>
           </div>
           <p className="text-sm text-zinc-500">
-            Month {week.month.id}: {week.month.title} — {week.title}
+            {monthLabel(week.month)}: {week.month.title} — {week.title}
           </p>
         </div>
         <div className="flex gap-1.5 shrink-0">
-          <Link href={`/week?date=${prevDate}`}>
-            <Button variant="ghost" size="sm">
+          {prevStart ? (
+            <Link href={`/week?date=${iso(prevStart)}`}>
+              <Button variant="ghost" size="sm">
+                ← Prev
+              </Button>
+            </Link>
+          ) : (
+            <Button variant="ghost" size="sm" disabled>
               ← Prev
             </Button>
-          </Link>
-          <Link href={`/week?date=${nextDate}`}>
-            <Button variant="ghost" size="sm">
+          )}
+          {nextStart ? (
+            <Link href={`/week?date=${iso(nextStart)}`}>
+              <Button variant="ghost" size="sm">
+                Next →
+              </Button>
+            </Link>
+          ) : (
+            <Button variant="ghost" size="sm" disabled>
               Next →
             </Button>
-          </Link>
+          )}
         </div>
       </div>
 
@@ -133,11 +148,7 @@ export default async function WeekPage({
               ) : (
                 <div className="space-y-2">
                   {topics.map((t) => (
-                    <TopicRow
-                      key={t.id}
-                      topic={t as unknown as TopicRowData}
-                      compact
-                    />
+                    <TopicRow key={t.id} topic={t} compact />
                   ))}
                 </div>
               )}

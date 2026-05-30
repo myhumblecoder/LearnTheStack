@@ -88,19 +88,3 @@ export async function getRecentQuizAttempts(limit = 5) {
     },
   });
 }
-
-export async function getActiveSession() {
-  return prisma.studySession.findFirst({
-    where: { endedAt: null },
-    orderBy: { startedAt: "desc" },
-  });
-}
-
-export async function getTodayStudyMinutes() {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const sessions = await prisma.studySession.findMany({
-    where: { startedAt: { gte: startOfDay } },
-  });
-  return sessions.reduce((sum, s) => sum + s.totalMinutes, 0);
-}

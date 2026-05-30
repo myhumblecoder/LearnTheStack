@@ -120,32 +120,48 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  // Phase boundary — called from the interval callback (safe to setState here).
-  const completePhase = useCallback(() => {
+  // Advance to the next phase. `credit` is true only when a focus block ran to
+  // completion — a skipped focus block must NOT log a pomodoro or any minutes.
+  const advance = useCallback((credit: boolean) => {
     if (modeRef.current === "focus") {
-      const n = pomosRef.current + 1;
-      setPomos(n);
-      if (sessionIdRef.current) {
-        recordPomodoro(sessionIdRef.current, FOCUS_MIN, focusRef.current?.id ?? null);
+      if (credit) {
+        const n = pomosRef.current + 1;
+        setPomos(n);
+        if (sessionIdRef.current) {
+          recordPomodoro(
+            sessionIdRef.current,
+            FOCUS_MIN,
+            focusRef.current?.id ?? null
+          ).catch((e) => console.error("Failed to record pomodoro", e));
+        }
+        const isLong = n % LONG_EVERY === 0;
+        setOverlay({
+          title: `Pomodoro ${n} complete!`,
+          message: isLong
+            ? "Four in a row — take a long break (~15 min). Step away from the screen."
+            : "Nice work. Take a 5-minute break — stand up, no screens.",
+        });
+        setMode("break");
+        setSecondsLeft((isLong ? LONG_BREAK_MIN : BREAK_MIN) * 60);
+      } else {
+        // Skipped focus → short break, no credit.
+        setMode("break");
+        setSecondsLeft(BREAK_MIN * 60);
       }
-      const isLong = n % LONG_EVERY === 0;
-      setOverlay({
-        title: `Pomodoro ${n} complete!`,
-        message: isLong
-          ? "Four in a row — take a long break (~15 min). Step away from the screen."
-          : "Nice work. Take a 5-minute break — stand up, no screens.",
-      });
-      setMode("break");
-      setSecondsLeft((isLong ? LONG_BREAK_MIN : BREAK_MIN) * 60);
     } else {
-      setOverlay({
-        title: "Break over",
-        message: "Back to focus — one pomodoro at a time.",
-      });
+      if (credit) {
+        setOverlay({
+          title: "Break over",
+          message: "Back to focus — one pomodoro at a time.",
+        });
+      }
       setMode("focus");
       setSecondsLeft(FOCUS_MIN * 60);
     }
   }, []);
+
+  // Natural countdown-to-zero credits the phase; called from the interval.
+  const completePhase = useCallback(() => advance(true), [advance]);
 
   // Tick while running.
   useEffect(() => {
@@ -182,10 +198,8 @@ export function PomodoroProvider({ children }: { children: React.ReactNode }) {
 
   const pause = useCallback(() => setRunning(false), []);
   const resume = useCallback(() => setRunning(true), []);
-  const skip = useCallback(() => {
-    setRunning(true);
-    setSecondsLeft(0);
-  }, []);
+  // Skip jumps to the next phase without crediting the current one.
+  const skip = useCallback(() => advance(false), [advance]);
   const reset = useCallback(async () => {
     setRunning(false);
     if (sessionIdRef.current) {

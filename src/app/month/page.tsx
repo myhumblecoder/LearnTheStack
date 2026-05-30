@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurriculumWithSchedule, formatUtc } from "@/lib/curriculum/schedule";
+import { getCurriculumWithSchedule, formatUtc, monthLabel } from "@/lib/curriculum/schedule";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -40,7 +40,7 @@ export default async function MonthPage() {
           >
             <div className="flex items-center justify-between gap-3 mb-1">
               <CardTitle className="text-base">
-                {month.isBuffer ? "Buffer" : `Month ${month.id}`}: {month.title}
+                {monthLabel(month)}: {month.title}
               </CardTitle>
               <div className="flex items-center gap-2 shrink-0">
                 {month.isBuffer && <Badge variant="warning">🎄 holidays</Badge>}

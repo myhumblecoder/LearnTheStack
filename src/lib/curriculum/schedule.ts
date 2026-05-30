@@ -45,6 +45,12 @@ export function formatUtc(
   return new Intl.DateTimeFormat("en-US", { ...opts, timeZone: "UTC" }).format(d);
 }
 
+// Consistent month heading across every view: buffer months read "Buffer"
+// rather than a numbered "Month N".
+export function monthLabel(m: { id: number; isBuffer: boolean }): string {
+  return m.isBuffer ? "Buffer" : `Month ${m.id}`;
+}
+
 const topicInclude = {
   progress: true,
   resources: true,
@@ -90,6 +96,26 @@ export async function getWeekForDate(date: Date) {
       },
     },
   });
+}
+
+// Start date of the week immediately before/after the given week start, or null
+// at the calendar boundaries. Used to drive (and disable) week navigation.
+export async function getPrevWeekStart(weekStart: Date): Promise<Date | null> {
+  const w = await prisma.week.findFirst({
+    where: { startDate: { lt: startOfUtcDay(weekStart) } },
+    orderBy: { startDate: "desc" },
+    select: { startDate: true },
+  });
+  return w?.startDate ?? null;
+}
+
+export async function getNextWeekStart(weekStart: Date): Promise<Date | null> {
+  const w = await prisma.week.findFirst({
+    where: { startDate: { gt: startOfUtcDay(weekStart) } },
+    orderBy: { startDate: "asc" },
+    select: { startDate: true },
+  });
+  return w?.startDate ?? null;
 }
 
 // Next calendar day (on or after `after`) that has any scheduled topic.

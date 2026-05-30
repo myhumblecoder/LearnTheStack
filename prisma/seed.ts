@@ -1038,10 +1038,16 @@ const defaultPomodoros: Record<TopicType, number> = {
   EXERCISE: 2,
 };
 
-// Weekday offsets within a Monday-anchored study week.
-// Core-ish work lands Mon/Wed/Fri/Sat; DSA lands Tue/Thu.
-const CORE_OFFSETS = [0, 2, 4, 5];
-const DSA_OFFSETS = [1, 3];
+// Target weekdays (UTC getUTCDay: Sun=0 … Sat=6). Core work lands
+// Mon/Wed/Fri/Sat; DSA lands Tue/Thu. These are resolved to an offset from each
+// week's actual start day, so topics hit the intended weekday no matter which
+// day of the week the calendar month begins on.
+const CORE_DAYS = [1, 3, 5, 6];
+const DSA_DAYS = [2, 4];
+
+function offsetToWeekday(weekStart: Date, targetDow: number): number {
+  return (targetDow - weekStart.getUTCDay() + 7) % 7;
+}
 
 async function main() {
   console.log("Seeding extended 9-month curriculum (Jun 2026 → Feb 2027)…");
@@ -1097,16 +1103,16 @@ async function main() {
         const topic = week.topics[i];
         const track = topic.track ?? "CORE";
 
-        // Assign a concrete study day within the week.
-        let offset: number;
+        // Assign a concrete study day on the intended weekday within the week.
+        let targetDow: number;
         if (track === "DSA") {
-          offset = DSA_OFFSETS[dsaIdx % DSA_OFFSETS.length];
+          targetDow = DSA_DAYS[dsaIdx % DSA_DAYS.length];
           dsaIdx++;
         } else {
-          offset = CORE_OFFSETS[coreIdx % CORE_OFFSETS.length];
+          targetDow = CORE_DAYS[coreIdx % CORE_DAYS.length];
           coreIdx++;
         }
-        let scheduledDate = addDays(weekStart, offset);
+        let scheduledDate = addDays(weekStart, offsetToWeekday(weekStart, targetDow));
         if (scheduledDate > monthEnd) scheduledDate = monthEnd;
 
         const data = {
