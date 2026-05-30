@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { FocusButton } from "@/components/pomodoro/FocusButton";
 import Link from "next/link";
 
 export default async function LessonPage({
@@ -99,7 +100,8 @@ export default async function LessonPage({
             </div>
           )}
 
-          <div className="mt-3">
+          <div className="mt-3 flex items-center gap-2">
+            <FocusButton topicId={topicId} title={topic.title} />
             <Link href={`/quiz/${topicId}`}>
               <Button variant="secondary" size="sm">
                 Take Quiz
