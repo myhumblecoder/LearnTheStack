@@ -1,11 +1,8 @@
 import Link from "next/link";
+import { STATUS_META, type StatusKey } from "@/lib/curriculum/status";
 
+export type { StatusKey };
 export type TrackKey = "CORE" | "DSA" | "AZURE" | "CLAUDE_CODE";
-export type StatusKey =
-  | "NOT_STARTED"
-  | "IN_PROGRESS"
-  | "QUIZ_PENDING"
-  | "COMPLETED";
 
 export const TRACK_META: Record<
   TrackKey,
@@ -31,13 +28,6 @@ export const TRACK_META: Record<
     icon: "🤖",
     cls: "bg-emerald-900/40 text-emerald-300 border-emerald-800",
   },
-};
-
-const STATUS_META: Record<StatusKey, { icon: string; cls: string }> = {
-  COMPLETED: { icon: "✓", cls: "text-green-400" },
-  IN_PROGRESS: { icon: "→", cls: "text-blue-400" },
-  QUIZ_PENDING: { icon: "?", cls: "text-yellow-400" },
-  NOT_STARTED: { icon: "○", cls: "text-zinc-600" },
 };
 
 export interface TopicRowData {
@@ -81,7 +71,7 @@ export function TopicRow({
         >
           {"🍅".repeat(topic.estimatedPomodoros)}
         </span>
-        <span className={`ml-auto text-xs font-bold ${s.cls}`}>{s.icon}</span>
+        <span className={`ml-auto text-xs font-bold ${s.textCls}`}>{s.icon}</span>
       </div>
       <div className="text-sm text-zinc-200 leading-snug">{topic.title}</div>
     </Link>

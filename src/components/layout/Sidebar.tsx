@@ -2,20 +2,7 @@ import Link from "next/link";
 import { getFullCurriculum } from "@/lib/curriculum/queries";
 import { getCurrentTopic } from "@/lib/curriculum/progression";
 import { Badge } from "@/components/ui/Badge";
-
-const statusIcon: Record<string, string> = {
-  COMPLETED: "✓",
-  IN_PROGRESS: "→",
-  QUIZ_PENDING: "?",
-  NOT_STARTED: "○",
-};
-
-const statusVariant: Record<string, "success" | "info" | "warning" | "muted"> = {
-  COMPLETED: "success",
-  IN_PROGRESS: "info",
-  QUIZ_PENDING: "warning",
-  NOT_STARTED: "muted",
-};
+import { STATUS_META, type StatusKey } from "@/lib/curriculum/status";
 
 export async function Sidebar() {
   const curriculum = await getFullCurriculum();
@@ -60,7 +47,9 @@ export async function Sidebar() {
                   Week {week.weekNum}: {week.title}
                 </div>
                 {week.topics.map((topic) => {
-                  const status = topic.progress?.status ?? "NOT_STARTED";
+                  const status = (topic.progress?.status ??
+                    "NOT_STARTED") as StatusKey;
+                  const meta = STATUS_META[status];
                   const isCurrent = currentTopic?.id === topic.id;
                   return (
                     <Link
@@ -72,8 +61,8 @@ export async function Sidebar() {
                           : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
                       }`}
                     >
-                      <Badge variant={statusVariant[status]} className="text-[10px] px-1.5 py-0">
-                        {statusIcon[status]}
+                      <Badge variant={meta.badge} className="text-[10px] px-1.5 py-0">
+                        {meta.icon}
                       </Badge>
                       <span className="truncate">{topic.title}</span>
                     </Link>

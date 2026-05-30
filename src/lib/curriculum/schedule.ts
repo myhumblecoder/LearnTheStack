@@ -1,4 +1,14 @@
 import { prisma } from "@/lib/db";
+import type { Prisma } from "@/generated/prisma/client";
+
+// Shared shape for loading a week with its month and dated, ordered topics.
+const weekWithTopicsInclude = {
+  month: true,
+  topics: {
+    orderBy: [{ scheduledDate: "asc" }, { sortOrder: "asc" }],
+    include: { progress: true, resources: true },
+  },
+} satisfies Prisma.WeekInclude;
 
 // ---------------------------------------------------------------------------
 // Date helpers. Scheduled dates are stored as @db.Date (UTC midnight), so all
@@ -75,26 +85,14 @@ export async function getWeekForDate(date: Date) {
 
   const containing = await prisma.week.findFirst({
     where: { startDate: { lte: day }, endDate: { gte: day } },
-    include: {
-      month: true,
-      topics: {
-        orderBy: [{ scheduledDate: "asc" }, { sortOrder: "asc" }],
-        include: { progress: true, resources: true },
-      },
-    },
+    include: weekWithTopicsInclude,
   });
   if (containing) return containing;
 
   return prisma.week.findFirst({
     where: { startDate: { gte: day } },
     orderBy: { startDate: "asc" },
-    include: {
-      month: true,
-      topics: {
-        orderBy: [{ scheduledDate: "asc" }, { sortOrder: "asc" }],
-        include: { progress: true, resources: true },
-      },
-    },
+    include: weekWithTopicsInclude,
   });
 }
 
