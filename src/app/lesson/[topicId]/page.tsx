@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ChatPanel } from "@/components/chat/ChatPanel";
+import { FocusButton } from "@/components/pomodoro/FocusButton";
 import Link from "next/link";
 
 export default async function LessonPage({
@@ -70,21 +71,37 @@ export default async function LessonPage({
 
           {topic.resources.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {topic.resources.map((url, i) => (
-                <a
-                  key={i}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-400 hover:text-blue-300 underline"
-                >
-                  {new URL(url).hostname}
-                </a>
-              ))}
+              {topic.resources.map((r) => {
+                const icon =
+                  r.type === "VIDEO" ? "🎥" : r.type === "TEXTBOOK" ? "📚" : "📖";
+                const inner = (
+                  <span className="inline-flex items-center gap-1.5 text-xs rounded-md border border-zinc-700 bg-zinc-900/60 px-2 py-1 text-zinc-300">
+                    <span>{icon}</span>
+                    <span>{r.label}</span>
+                    {r.source && (
+                      <span className="text-zinc-500">· {r.source}</span>
+                    )}
+                  </span>
+                );
+                return r.url ? (
+                  <a
+                    key={r.id}
+                    href={r.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  <span key={r.id}>{inner}</span>
+                );
+              })}
             </div>
           )}
 
-          <div className="mt-3">
+          <div className="mt-3 flex items-center gap-2">
+            <FocusButton topicId={topicId} title={topic.title} />
             <Link href={`/quiz/${topicId}`}>
               <Button variant="secondary" size="sm">
                 Take Quiz

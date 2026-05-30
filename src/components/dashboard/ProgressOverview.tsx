@@ -1,10 +1,11 @@
-import { getProgressStats, getTodayStudyMinutes } from "@/lib/curriculum/queries";
+import { getProgressStats } from "@/lib/curriculum/queries";
+import { getTodayPomodoroStats } from "@/actions/session";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
 export async function ProgressOverview() {
   const stats = await getProgressStats();
-  const todayMinutes = await getTodayStudyMinutes();
+  const today = await getTodayPomodoroStats();
   const percent = Math.round((stats.completed / stats.total) * 100);
 
   return (
@@ -34,13 +35,16 @@ export async function ProgressOverview() {
 
       <Card>
         <CardTitle className="text-sm text-zinc-500 mb-2">
-          Today&apos;s Study Time
+          Today&apos;s Focus
         </CardTitle>
         <div className="text-2xl font-bold text-blue-400">
-          {todayMinutes}m
+          {today.pomodoros} 🍅{" "}
+          <span className="text-base font-normal text-zinc-500">
+            · {today.minutes}m
+          </span>
         </div>
         <p className="text-xs text-zinc-500 mt-2">
-          {todayMinutes >= 60 ? "Great session!" : "Keep going!"}
+          {today.minutes >= 60 ? "Great session!" : "Keep going!"}
         </p>
       </Card>
     </div>
