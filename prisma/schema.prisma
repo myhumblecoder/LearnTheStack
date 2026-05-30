@@ -8,21 +8,33 @@ datasource db {
 }
 
 model Month {
-  id          Int     @id
+  id          Int      @id
   title       String
   description String
+  startDate   DateTime @db.Date
+  endDate     DateTime @db.Date
+  isBuffer    Boolean  @default(false)
   weeks       Week[]
 }
 
 model Week {
-  id      Int     @id @default(autoincrement())
-  monthId Int
-  weekNum Int
-  title   String
-  month   Month   @relation(fields: [monthId], references: [id])
-  topics  Topic[]
+  id        Int      @id @default(autoincrement())
+  monthId   Int
+  weekNum   Int
+  title     String
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  month     Month    @relation(fields: [monthId], references: [id])
+  topics    Topic[]
 
   @@unique([monthId, weekNum])
+}
+
+enum Track {
+  CORE
+  DSA
+  AZURE
+  CLAUDE_CODE
 }
 
 enum TopicType {
@@ -39,28 +51,47 @@ enum ProgressStatus {
 }
 
 model Topic {
-  id          Int           @id @default(autoincrement())
-  weekId      Int
-  sortOrder   Int
-  title       String
-  type        TopicType
-  content     String
-  resources   String[]
-  week        Week          @relation(fields: [weekId], references: [id])
-  progress    TopicProgress?
-  quizAttempts QuizAttempt[]
-  chatMessages ChatMessage[]
+  id                 Int            @id @default(autoincrement())
+  weekId             Int
+  sortOrder          Int
+  title              String
+  type               TopicType
+  track              Track          @default(CORE)
+  content            String
+  scheduledDate      DateTime?      @db.Date
+  estimatedPomodoros Int            @default(2)
+  week               Week           @relation(fields: [weekId], references: [id])
+  progress           TopicProgress?
+  resources          Resource[]
+  quizAttempts       QuizAttempt[]
+  chatMessages       ChatMessage[]
 
   @@unique([weekId, sortOrder])
 }
 
+enum ResourceType {
+  DOC
+  VIDEO
+  TEXTBOOK
+}
+
+model Resource {
+  id      Int          @id @default(autoincrement())
+  topicId Int
+  type    ResourceType
+  label   String
+  url     String?
+  source  String?
+  topic   Topic        @relation(fields: [topicId], references: [id], onDelete: Cascade)
+}
+
 model TopicProgress {
-  id        Int            @id @default(autoincrement())
-  topicId   Int            @unique
-  status    ProgressStatus @default(NOT_STARTED)
-  startedAt DateTime?
+  id          Int            @id @default(autoincrement())
+  topicId     Int            @unique
+  status      ProgressStatus @default(NOT_STARTED)
+  startedAt   DateTime?
   completedAt DateTime?
-  topic     Topic          @relation(fields: [topicId], references: [id])
+  topic       Topic          @relation(fields: [topicId], references: [id])
 }
 
 model QuizAttempt {
@@ -107,8 +138,10 @@ model MessageFeedback {
 }
 
 model StudySession {
-  id        Int      @id @default(autoincrement())
-  startedAt DateTime @default(now())
-  endedAt   DateTime?
-  totalMinutes Int   @default(0)
+  id           Int       @id @default(autoincrement())
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  totalMinutes Int       @default(0)
+  pomodoros    Int       @default(0)
+  topicId      Int?
 }

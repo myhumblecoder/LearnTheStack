@@ -22,6 +22,7 @@ export async function getTopic(topicId: number) {
     where: { id: topicId },
     include: {
       progress: true,
+      resources: true,
       week: {
         include: {
           month: true,

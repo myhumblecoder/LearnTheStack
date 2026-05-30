@@ -2,18 +2,29 @@ import "dotenv/config";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client.js";
+
 type TopicType = "READ" | "BUILD" | "EXERCISE";
+type Track = "CORE" | "DSA" | "AZURE" | "CLAUDE_CODE";
+type ResourceType = "DOC" | "VIDEO" | "TEXTBOOK";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const adapter = new PrismaPg(pool as any);
 const prisma = new PrismaClient({ adapter });
 
+interface ResourceSeed {
+  type: ResourceType;
+  label: string;
+  url?: string;
+  source?: string;
+}
+
 interface TopicSeed {
   title: string;
   type: TopicType;
+  track?: Track; // defaults to CORE
   content: string;
-  resources: string[];
+  resources?: ResourceSeed[];
 }
 
 interface WeekSeed {
@@ -26,72 +37,136 @@ interface MonthSeed {
   id: number;
   title: string;
   description: string;
+  year: number;
+  month: number; // 1-12 calendar month
+  isBuffer?: boolean;
   weeks: WeekSeed[];
 }
 
+// ---------------------------------------------------------------------------
+// Reusable course resources (the user's owned Udemy library)
+// ---------------------------------------------------------------------------
+const VID = {
+  tsGrider: (): ResourceSeed => ({
+    type: "VIDEO",
+    label: "TypeScript: The Complete Developer's Guide",
+    source: "Stephen Grider · Udemy",
+  }),
+  claudeCode: (): ResourceSeed => ({
+    type: "VIDEO",
+    label: "Claude Code: Building Faster with AI, Prototype to Prod",
+    source: "Frank Kane · Udemy",
+  }),
+  agentic: (): ResourceSeed => ({
+    type: "VIDEO",
+    label: "AI Engineer Agentic Track: Agent & MCP",
+    source: "Ed Donner · Udemy",
+  }),
+  ai900: (): ResourceSeed => ({
+    type: "VIDEO",
+    label: "AI-900: Azure AI Fundamentals in a Weekend",
+    source: "in28Minutes · Udemy",
+  }),
+  dsa: (): ResourceSeed => ({
+    type: "VIDEO",
+    label: "Master the Coding Interview: Data Structures + Algorithms",
+    source: "Andrei Neagoie · Udemy",
+  }),
+};
+
+const doc = (label: string, url: string): ResourceSeed => ({
+  type: "DOC",
+  label,
+  url,
+});
+
+// A standard monthly DSA topic, parameterised by focus.
+function dsaTopic(focus: string, practice: string): TopicSeed {
+  return {
+    title: `DSA: ${focus}`,
+    type: "EXERCISE",
+    track: "DSA",
+    content: `Steady fundamentals track (no deadline). This month: ${focus}. Aim for ~2 problems/week, written in TypeScript so it reinforces the stack work. ${practice} Use the video for theory and any judge (LeetCode/Exercism) for reps. Log solutions in your personal algorithms/ repo.`,
+    resources: [VID.dsa()],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// The 9-month extended curriculum (Jun 2026 → Feb 2027)
+// Domain note: the "build" tasks extend THIS study-tracker app
+// (Month → Week → Topic), which is the real domain you learn on.
+// ---------------------------------------------------------------------------
 const curriculum: MonthSeed[] = [
   {
     id: 1,
     title: "Next.js App Router + TypeScript Foundations",
     description:
-      "Be fluent in the App Router mental model and confident with TypeScript's type system at depth.",
+      "Be fluent in the App Router mental model and confident with TypeScript at depth. Front-load Claude Code so every later month is faster.",
+    year: 2026,
+    month: 6,
     weeks: [
       {
         weekNum: 1,
-        title: "App Router Internals",
+        title: "App Router Internals + Claude Code On-Ramp",
         topics: [
           {
             title: "Routing, Layouts, Pages, Loading UI, Error Boundaries",
             type: "READ",
             content:
-              "Study the Next.js App Router fundamentals: file-based routing, nested layouts, loading states, and error boundaries. Understand how the file system maps to URL segments and how layouts persist across navigations.",
-            resources: ["https://nextjs.org/docs/app"],
+              "Study the Next.js App Router fundamentals: file-based routing, nested layouts, loading states, and error boundaries. Trace how this app's src/app folder maps to its URL segments.",
+            resources: [doc("Next.js — App Router", "https://nextjs.org/docs/app")],
           },
           {
             title: "Server vs Client Components",
             type: "READ",
             content:
-              "Understand the rendering model: Server Components render on the server and send HTML, Client Components hydrate in the browser. Learn when to use 'use client' and the rules of composition.",
+              "Understand the rendering model: Server Components render on the server, Client Components hydrate in the browser. Find examples of each in this app (Sidebar is a Server Component; ChatPanel is a Client Component).",
             resources: [
-              "https://nextjs.org/docs/app/building-your-application/rendering",
+              doc(
+                "Next.js — Rendering",
+                "https://nextjs.org/docs/app/building-your-application/rendering"
+              ),
             ],
           },
           {
-            title: "Scaffold Project Tracker Shell",
+            title: "Claude Code On-Ramp (part 1)",
             type: "BUILD",
+            track: "CLAUDE_CODE",
             content:
-              "Build the project tracker shell: root layout, a /projects route, a /projects/[id] dynamic route, loading and error states. Practice nested layouts and dynamic segments.",
-            resources: [],
+              "Highest-leverage fortnight in the plan. Watch Kane's course and tune Claude Code on THIS repo: refine CLAUDE.md and add one custom slash command for a workflow you repeat.",
+            resources: [VID.claudeCode()],
           },
         ],
       },
       {
         weekNum: 2,
-        title: "Server Actions",
+        title: "Server Actions + Claude Code On-Ramp",
         topics: [
           {
             title: "Server Actions and Mutations",
             type: "READ",
             content:
-              "Learn how Server Actions work: async functions that run on the server, callable from Client Components via forms or programmatically. Understand revalidation, redirects, and error handling in actions.",
+              "Learn how Server Actions work: async server functions callable from the client. Read this app's src/actions (progress.ts, session.ts, feedback.ts) to see real examples.",
             resources: [
-              "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations",
+              doc(
+                "Next.js — Server Actions",
+                "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations"
+              ),
             ],
           },
           {
-            title: "Forms and Mutations Patterns",
-            type: "READ",
+            title: "Claude Code On-Ramp (part 2)",
+            type: "BUILD",
+            track: "CLAUDE_CODE",
             content:
-              "Deep dive into form patterns: progressive enhancement, useActionState, optimistic updates, and handling pending states in the UI.",
-            resources: [
-              "https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations#forms",
-            ],
+              "Add one hook (e.g. run `tsc --noEmit` after edits) and connect one MCP server (Notion/GitHub). From here on, build every month WITH Claude Code as a pair.",
+            resources: [VID.claudeCode()],
           },
           {
-            title: "Build CRUD Actions",
+            title: "Add a Server Action to this app",
             type: "BUILD",
             content:
-              "Implement create/update/delete project actions. Use in-memory state for now. Focus on the Server Action pattern, form binding, revalidation, and error handling.",
+              "Extend the app: add a Server Action (e.g. mark a topic complete from the dashboard, or add a study note). Practice revalidation, pending states, and error handling.",
             resources: [],
           },
         ],
@@ -104,26 +179,33 @@ const curriculum: MonthSeed[] = [
             title: "Generics",
             type: "READ",
             content:
-              "Master TypeScript generics: generic functions, classes, constraints, default type parameters. Understand how generics enable type-safe reusable code.",
+              "Master TypeScript generics: generic functions, classes, constraints, default type parameters. Grider's course is excellent scaffolding here.",
             resources: [
-              "https://www.typescriptlang.org/docs/handbook/2/generics.html",
+              doc(
+                "TS Handbook — Generics",
+                "https://www.typescriptlang.org/docs/handbook/2/generics.html"
+              ),
+              VID.tsGrider(),
             ],
           },
           {
             title: "Conditional and Template Literal Types",
             type: "READ",
             content:
-              "Learn conditional types (extends, infer, distributive), mapped types, and template literal types. These are the building blocks for advanced type-level programming.",
+              "Learn conditional types (extends, infer, distributive), mapped types, and template literal types — the building blocks for type-level programming.",
             resources: [
-              "https://www.typescriptlang.org/docs/handbook/2/conditional-types.html",
-              "https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html",
+              doc(
+                "TS Handbook — Conditional Types",
+                "https://www.typescriptlang.org/docs/handbook/2/conditional-types.html"
+              ),
+              VID.tsGrider(),
             ],
           },
           {
-            title: "Type Server Action Inputs with Generics",
+            title: "Type the action layer with generics",
             type: "BUILD",
             content:
-              "Type all Server Action inputs and return types with generics. Write a Result<T, E> type and use it as your action return contract. Practice discriminated unions and exhaustive checking.",
+              "Write a Result<T, E> type and use it as the return contract for this app's Server Actions. Practice discriminated unions and exhaustive checking.",
             resources: [],
           },
         ],
@@ -136,32 +218,38 @@ const curriculum: MonthSeed[] = [
             title: "Zod Core API",
             type: "READ",
             content:
-              "Learn Zod's core API: primitives, objects, arrays, unions, transforms, refinements, and error formatting. Understand how Zod bridges runtime validation and static types.",
-            resources: ["https://zod.dev"],
+              "Learn Zod's core API: primitives, objects, unions, transforms, refinements, error formatting. This app already uses Zod v4 — see src/lib/ai/schemas.ts.",
+            resources: [doc("Zod", "https://zod.dev")],
           },
           {
-            title: "Replace Types with Zod Schemas",
+            title: "Validate action inputs with Zod",
             type: "BUILD",
             content:
-              "Replace all raw TypeScript types on Server Action inputs with Zod schemas. Infer TS types from Zod (z.infer<>). Add .refine() validation to at least two fields.",
+              "Add Zod schemas to this app's Server Action inputs and infer the TS types with z.infer<>. Add .refine() validation to at least two fields.",
             resources: [],
           },
           {
             title: "Zod Advanced Patterns Exercise",
             type: "EXERCISE",
             content:
-              "Practice advanced Zod: discriminated unions, recursive schemas, custom error maps, and schema composition with .merge() and .extend(). Build a schema that validates nested project data.",
-            resources: ["https://zod.dev"],
+              "Practice discriminated unions, recursive schemas, custom error maps, and composition with .merge()/.extend().",
+            resources: [doc("Zod", "https://zod.dev")],
           },
+          dsaTopic(
+            "Big-O, arrays, strings, hash maps",
+            "Start with Big-O intuition, then array/string traversal and hash-map lookups."
+          ),
         ],
       },
     ],
   },
   {
     id: 2,
-    title: "Data Layer: Prisma + PostgreSQL",
+    title: "Data Layer: Prisma + PostgreSQL + Neon",
     description:
-      "Replace in-memory state with a real, fully type-safe data layer.",
+      "Deepen the data layer that already powers this app, then take it to Neon.",
+    year: 2026,
+    month: 7,
     weeks: [
       {
         weekNum: 1,
@@ -171,25 +259,34 @@ const curriculum: MonthSeed[] = [
             title: "Prisma Data Modeling",
             type: "READ",
             content:
-              "Learn Prisma schema language: models, fields, relations (1:1, 1:n, m:n), enums, and attributes. Understand how the schema maps to database tables.",
+              "Learn the Prisma schema language: models, fields, relations, enums, attributes. Read this app's prisma/schema.prisma — Month → Week → Topic with progress, quizzes, resources.",
             resources: [
-              "https://www.prisma.io/docs/orm/prisma-schema/data-model",
+              doc(
+                "Prisma — Data model",
+                "https://www.prisma.io/docs/orm/prisma-schema/data-model"
+              ),
             ],
           },
           {
             title: "Prisma Migrations",
             type: "READ",
             content:
-              "Understand Prisma Migrate: creating migrations, applying them, resolving drift, and handling migration history. Learn the difference between dev and deploy workflows.",
-            resources: ["https://www.prisma.io/docs/orm/prisma-migrate"],
+              "Understand Prisma Migrate: creating, applying, resolving drift, migration history, dev vs deploy workflows.",
+            resources: [
+              doc("Prisma — Migrate", "https://www.prisma.io/docs/orm/prisma-migrate"),
+            ],
           },
           {
-            title: "Model Project/Epic/Story Schema",
+            title: "Extend the schema with a real migration",
             type: "BUILD",
             content:
-              "Model Project, Epic, and Story in your Prisma schema with proper relations. Run your first migration against a local Postgres instance. Verify the schema with Prisma Studio.",
+              "Add a feature to this app's schema (e.g. a StudyNote model, or tags on Topic). Run a migration with `npm run db:migrate` and verify in Prisma Studio.",
             resources: [],
           },
+          dsaTopic(
+            "Two pointers, sliding window",
+            "Classic patterns for array/string subranges."
+          ),
         ],
       },
       {
@@ -200,25 +297,31 @@ const curriculum: MonthSeed[] = [
             title: "Prisma CRUD Operations",
             type: "READ",
             content:
-              "Learn Prisma Client CRUD: create, findMany, findUnique, update, delete, upsert. Understand how Prisma generates type-safe query methods from your schema.",
+              "Learn Prisma Client CRUD and how it generates type-safe methods. Compare against this app's src/lib/curriculum/queries.ts.",
             resources: [
-              "https://www.prisma.io/docs/orm/prisma-client/queries/crud",
+              doc(
+                "Prisma — CRUD",
+                "https://www.prisma.io/docs/orm/prisma-client/queries/crud"
+              ),
             ],
           },
           {
             title: "Select Fields and Relations",
             type: "READ",
             content:
-              "Master Prisma's select and include. Understand how return types narrow based on your select — no manual typing needed. Learn relation loading strategies.",
+              "Master select and include and how return types narrow from your select — no manual typing. This app relies on this heavily.",
             resources: [
-              "https://www.prisma.io/docs/orm/prisma-client/queries/select-fields",
+              doc(
+                "Prisma — Select fields",
+                "https://www.prisma.io/docs/orm/prisma-client/queries/select-fields"
+              ),
             ],
           },
           {
-            title: "Wire Server Actions to Prisma",
+            title: "Add a typed query to this app",
             type: "BUILD",
             content:
-              "Replace in-memory storage with Prisma queries. Wire all Server Actions to Prisma Client calls. Observe how Prisma's return types flow through your application.",
+              "Write a new query in queries.ts (e.g. study minutes per week, or topics-by-track) and surface it in the dashboard. Let the select drive the type.",
             resources: [],
           },
         ],
@@ -231,25 +334,31 @@ const curriculum: MonthSeed[] = [
             title: "Neon Serverless Driver",
             type: "READ",
             content:
-              "Learn Neon's serverless driver: HTTP-based queries, WebSocket connections, and how it differs from traditional Postgres drivers. Understand cold starts and connection overhead.",
+              "Learn Neon's serverless driver: HTTP queries, WebSocket connections, cold starts, connection overhead.",
             resources: [
-              "https://neon.tech/docs/serverless/serverless-driver",
+              doc(
+                "Neon — Serverless driver",
+                "https://neon.tech/docs/serverless/serverless-driver"
+              ),
             ],
           },
           {
             title: "Connection Pooling with PgBouncer",
             type: "READ",
             content:
-              "Understand connection pooling: why serverless apps need it, how PgBouncer works in Neon, pooled vs direct connection strings, and transaction vs session mode.",
+              "Understand pooled vs direct connections, transaction vs session mode, and why serverless needs pooling.",
             resources: [
-              "https://neon.tech/docs/connect/connection-pooling",
+              doc(
+                "Neon — Connection pooling",
+                "https://neon.tech/docs/connect/connection-pooling"
+              ),
             ],
           },
           {
-            title: "Migrate to Neon",
+            title: "Move this app from local Postgres to Neon",
             type: "BUILD",
             content:
-              "Migrate from local Postgres to a Neon branch. Configure pooled vs direct connections. Set up a dev branch and a prod branch in Neon.",
+              "Migrate from the local docker Postgres to a Neon branch. Configure pooled vs direct URLs and set up dev + prod branches.",
             resources: [],
           },
         ],
@@ -262,23 +371,19 @@ const curriculum: MonthSeed[] = [
             title: "Prisma Transactions",
             type: "READ",
             content:
-              "Learn Prisma transaction patterns: interactive transactions, sequential operations, nested writes. Understand isolation levels and when to use raw SQL.",
+              "Learn interactive transactions, sequential operations, nested writes, isolation levels, and when to drop to raw SQL.",
             resources: [
-              "https://www.prisma.io/docs/orm/prisma-client/queries/transactions",
+              doc(
+                "Prisma — Transactions",
+                "https://www.prisma.io/docs/orm/prisma-client/queries/transactions"
+              ),
             ],
           },
           {
-            title: "Build Transactional Operations",
+            title: "Add a transactional + raw-SQL operation",
             type: "BUILD",
             content:
-              "Wrap multi-step story creation in a Prisma transaction. Add one raw SQL query for a reporting aggregate that Prisma can't express cleanly.",
-            resources: [],
-          },
-          {
-            title: "Prisma Advanced Queries Exercise",
-            type: "EXERCISE",
-            content:
-              "Practice: aggregations, groupBy, cursor-based pagination, raw queries with type safety. Build a dashboard query that aggregates project stats across all relations.",
+              "Wrap a multi-step write in a transaction (e.g. complete topic + record a study session atomically). Add one raw SQL aggregate for a reporting stat.",
             resources: [],
           },
         ],
@@ -289,7 +394,9 @@ const curriculum: MonthSeed[] = [
     id: 3,
     title: "Agent Layer: Vercel AI SDK + Anthropic",
     description:
-      "Build a working agentic loop that can reason about and mutate your project tracker data.",
+      "Deepen the AI tutor that already lives in this app and make its agentic loop real.",
+    year: 2026,
+    month: 8,
     weeks: [
       {
         weekNum: 1,
@@ -299,25 +406,25 @@ const curriculum: MonthSeed[] = [
             title: "AI SDK Overview",
             type: "READ",
             content:
-              "Learn the Vercel AI SDK architecture: providers, core functions (generateText, streamText), and the unified interface for different LLM providers.",
-            resources: ["https://sdk.vercel.ai/docs/introduction"],
+              "Learn the Vercel AI SDK architecture: providers, generateText/streamText, the unified interface. This app uses ai v6 + @ai-sdk/anthropic — see src/lib/ai/tutor.ts.",
+            resources: [doc("Vercel AI SDK", "https://sdk.vercel.ai/docs/introduction")],
           },
           {
             title: "streamText and generateText",
             type: "READ",
             content:
-              "Deep dive into text generation: streaming vs non-streaming, message format, system prompts, temperature, and response handling patterns.",
+              "Streaming vs non-streaming, message format, system prompts, temperature. Trace how this app streams tutor responses in api/chat/route.ts.",
             resources: [
-              "https://sdk.vercel.ai/docs/ai-sdk-core/generating-text",
+              doc(
+                "AI SDK — Generating text",
+                "https://sdk.vercel.ai/docs/ai-sdk-core/generating-text"
+              ),
             ],
           },
-          {
-            title: "Build Basic AI Chat",
-            type: "BUILD",
-            content:
-              "Add an /assistant route. Wire a basic streamText call that takes a user prompt and streams a response into the UI. Get comfortable with the SDK's streaming pattern.",
-            resources: [],
-          },
+          dsaTopic(
+            "Stacks, queues, linked lists",
+            "Pointer manipulation and LIFO/FIFO structures."
+          ),
         ],
       },
       {
@@ -328,45 +435,54 @@ const curriculum: MonthSeed[] = [
             title: "Tools and Tool Calling",
             type: "READ",
             content:
-              "Learn AI SDK tool definitions: Zod schemas for parameters, execute functions, tool choice modes. Understand the tool call → result → continue loop.",
+              "Learn AI SDK tool definitions: Zod parameter schemas, execute functions, tool choice. Concepts also covered in Donner's Agentic Track (translate from Python/OpenAI to your TS/Anthropic stack).",
             resources: [
-              "https://sdk.vercel.ai/docs/ai-sdk-core/tools-and-tool-calling",
+              doc(
+                "AI SDK — Tools",
+                "https://sdk.vercel.ai/docs/ai-sdk-core/tools-and-tool-calling"
+              ),
+              VID.agentic(),
             ],
           },
           {
             title: "Multi-step Tool Calls (maxSteps)",
             type: "READ",
             content:
-              "Understand agentic loops with maxSteps: how the SDK automatically feeds tool results back to the model, enabling multi-step reasoning and sequential tool calls.",
-            resources: ["https://sdk.vercel.ai/docs/ai-sdk-core/agents"],
+              "Understand agentic loops with maxSteps: how tool results feed back to the model for multi-step reasoning.",
+            resources: [
+              doc("AI SDK — Agents", "https://sdk.vercel.ai/docs/ai-sdk-core/agents"),
+            ],
           },
           {
-            title: "Build Prisma-backed Tools",
+            title: "Give the tutor Prisma-backed tools",
             type: "BUILD",
             content:
-              "Define tools backed by Prisma queries: listProjects, createStory, updateStoryStatus. Let the agent call them in sequence to fulfil natural language requests.",
+              "Define tools backed by this app's queries (e.g. markTopicComplete, listUpcomingTopics, logStudySession) so the tutor can act on your schedule, not just talk.",
             resources: [],
           },
         ],
       },
       {
         weekNum: 3,
-        title: "Structured Outputs + Zod Integration",
+        title: "Structured Outputs + Zod",
         topics: [
           {
             title: "generateObject / streamObject",
             type: "READ",
             content:
-              "Learn structured output generation: Zod schemas as output format, mode options (json, tool), and how to get type-safe objects from LLM responses.",
+              "Structured output with Zod schemas as the output format. This app's quizzes already lean on structured results.",
             resources: [
-              "https://sdk.vercel.ai/docs/ai-sdk-core/generating-structured-data",
+              doc(
+                "AI SDK — Structured data",
+                "https://sdk.vercel.ai/docs/ai-sdk-core/generating-structured-data"
+              ),
             ],
           },
           {
-            title: "Build Structured Story Creation",
+            title: "Generate a structured study plan adjustment",
             type: "BUILD",
             content:
-              "Replace free-text story creation with generateObject + a Zod schema. The agent produces structured Story objects that pass directly into Prisma create calls.",
+              "Use generateObject + a Zod schema so the tutor can propose a structured re-plan (e.g. reschedule missed topics) that writes straight to the DB.",
             resources: [],
           },
         ],
@@ -379,23 +495,14 @@ const curriculum: MonthSeed[] = [
             title: "useChat and Chatbot UI",
             type: "READ",
             content:
-              "Learn the useChat hook: message management, streaming display, error handling, and how it connects to your API route. Understand the stream protocol.",
-            resources: ["https://sdk.vercel.ai/docs/ai-sdk-ui/chatbot"],
+              "Learn the useChat hook and stream protocol. This app's ChatPanel/MessageBubble are a working reference.",
+            resources: [doc("AI SDK — Chatbot", "https://sdk.vercel.ai/docs/ai-sdk-ui/chatbot")],
           },
           {
-            title: "Streaming with Server Actions",
-            type: "READ",
-            content:
-              "Understand streaming protocols: how responses flow from server to client, Data Stream Protocol, and how to display tool call progress in real-time.",
-            resources: [
-              "https://sdk.vercel.ai/docs/ai-sdk-ui/stream-protocol",
-            ],
-          },
-          {
-            title: "Build Streaming Tool Progress UI",
+            title: "Stream tool-call progress in the UI",
             type: "BUILD",
             content:
-              "Stream tool call progress into the UI so the user sees each tool firing in real-time, not just the final result. Build a polished chat interface.",
+              "Show each tool firing in real time (\"Rescheduling 2 topics…\") instead of only the final answer.",
             resources: [],
           },
         ],
@@ -404,42 +511,134 @@ const curriculum: MonthSeed[] = [
   },
   {
     id: 4,
+    title: "Azure AI-900 Cert Sprint",
+    description:
+      "A change-of-pace credential month. Off-stack but a real cert — sit the exam in the last week. Core paused.",
+    year: 2026,
+    month: 9,
+    weeks: [
+      {
+        weekNum: 1,
+        title: "AI-900 Foundations (first half)",
+        topics: [
+          {
+            title: "AI workloads & ML fundamentals",
+            type: "READ",
+            track: "AZURE",
+            content:
+              "Work through the first half of the in28Minutes course: AI workloads, responsible AI, and core machine learning concepts. Take notes.",
+            resources: [
+              VID.ai900(),
+              doc(
+                "Microsoft Learn — AI-900",
+                "https://learn.microsoft.com/credentials/certifications/azure-ai-fundamentals/"
+              ),
+            ],
+          },
+          dsaTopic(
+            "Recursion (light — cert month)",
+            "Keep it light this month; just recursion intuition and a couple of problems."
+          ),
+        ],
+      },
+      {
+        weekNum: 2,
+        title: "AI-900 Foundations (second half)",
+        topics: [
+          {
+            title: "Computer vision, NLP & generative AI on Azure",
+            type: "READ",
+            track: "AZURE",
+            content:
+              "Finish the course: Azure AI Vision, Language, Document Intelligence, and Azure OpenAI / generative AI services. Cross-reference the Microsoft Learn AI-900 path.",
+            resources: [
+              VID.ai900(),
+              doc(
+                "Microsoft Learn — AI-900 path",
+                "https://learn.microsoft.com/training/courses/ai-900t00/"
+              ),
+            ],
+          },
+        ],
+      },
+      {
+        weekNum: 3,
+        title: "Hands-On in the Azure Portal",
+        topics: [
+          {
+            title: "Provision and map Azure AI services",
+            type: "BUILD",
+            track: "AZURE",
+            content:
+              "In the free Azure portal, provision a Cognitive/AI service and try Azure OpenAI and AI Foundry. For each Azure concept, write the Anthropic/Vercel equivalent you already use.",
+            resources: [],
+          },
+        ],
+      },
+      {
+        weekNum: 4,
+        title: "Practice Exams + Sit the Exam",
+        topics: [
+          {
+            title: "Timed practice exams",
+            type: "EXERCISE",
+            track: "AZURE",
+            content:
+              "Take 2–3 timed practice exams. Aim for 85%+ consistently before booking.",
+            resources: [VID.ai900()],
+          },
+          {
+            title: "🎯 Sit the AI-900 exam",
+            type: "EXERCISE",
+            track: "AZURE",
+            content:
+              "Book and sit the AI-900 exam this week so it doesn't loom over the rest of the plan. Then write a one-page 'Azure AI ↔ my stack' note as the artifact.",
+            resources: [],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 5,
     title: "API Layer: tRPC + Rate Limiting + Caching",
     description:
-      "Harden the API surface, add Upstash Redis for caching and rate limiting, introduce tRPC.",
+      "Add the two stack pieces not yet installed — tRPC and Upstash Redis — by hardening this app's API surface.",
+    year: 2026,
+    month: 10,
     weeks: [
       {
         weekNum: 1,
         title: "tRPC Fundamentals",
         topics: [
           {
-            title: "tRPC Quickstart",
+            title: "tRPC Quickstart + Routers/Procedures",
             type: "READ",
             content:
-              "Learn tRPC basics: routers, procedures, context, and the end-to-end type safety from server to client without code generation.",
-            resources: ["https://trpc.io/docs/quickstart"],
-          },
-          {
-            title: "Routers and Procedures",
-            type: "READ",
-            content:
-              "Deep dive into tRPC routers: query vs mutation procedures, input validation, context injection, and router merging for modular APIs.",
-            resources: ["https://trpc.io/docs/server/routers"],
+              "Learn tRPC: routers, query vs mutation procedures, context, end-to-end type safety with no codegen.",
+            resources: [
+              doc("tRPC — Quickstart", "https://trpc.io/docs/quickstart"),
+              doc("tRPC — Routers", "https://trpc.io/docs/server/routers"),
+            ],
           },
           {
             title: "Next.js Integration",
             type: "READ",
             content:
-              "Set up tRPC with Next.js: API handler, client configuration, React Query integration, and server-side calling patterns.",
-            resources: ["https://trpc.io/docs/client/nextjs/setup"],
+              "Set up tRPC with Next.js: handler, client config, React Query integration, server-side calls.",
+            resources: [doc("tRPC — Next.js", "https://trpc.io/docs/client/nextjs/setup")],
           },
           {
-            title: "Migrate to tRPC Procedures",
+            title: "Move read queries into tRPC procedures",
             type: "BUILD",
             content:
-              "Move project/epic/story queries into tRPC procedures. Observe the type flow from Prisma → tRPC → client with zero manual casting.",
+              "Add tRPC to this app and move the curriculum read queries into procedures. Watch the type flow Prisma → tRPC → client with zero casting.",
             resources: [],
           },
+          dsaTopic(
+            "Trees + binary search trees",
+            "Tree traversal (in/pre/post-order) and BST operations."
+          ),
         ],
       },
       {
@@ -450,14 +649,14 @@ const curriculum: MonthSeed[] = [
             title: "tRPC Middlewares",
             type: "READ",
             content:
-              "Learn tRPC middleware: chaining, context extension, error handling, and how to build reusable procedure builders (authedProcedure, etc.).",
-            resources: ["https://trpc.io/docs/server/middlewares"],
+              "Middleware chaining, context extension, error handling, reusable procedure builders.",
+            resources: [doc("tRPC — Middlewares", "https://trpc.io/docs/server/middlewares")],
           },
           {
-            title: "Build Auth and Logging Middleware",
+            title: "Add logging + input validation middleware",
             type: "BUILD",
             content:
-              "Add an authedProcedure middleware. Add Zod .input() validation on all mutating procedures. Log all procedure calls with timing.",
+              "Add Zod .input() validation to mutating procedures and a middleware that logs every call with timing.",
             resources: [],
           },
         ],
@@ -470,16 +669,16 @@ const curriculum: MonthSeed[] = [
             title: "Upstash Redis SDK",
             type: "READ",
             content:
-              "Learn the Upstash Redis JavaScript SDK: REST-based Redis, commands, pipelining, and how it differs from traditional Redis clients.",
+              "Learn the REST-based Upstash Redis SDK: commands, pipelining, differences from traditional Redis clients.",
             resources: [
-              "https://upstash.com/docs/redis/sdks/ts/overview",
+              doc("Upstash Redis", "https://upstash.com/docs/redis/sdks/ts/overview"),
             ],
           },
           {
-            title: "Build Redis Cache Layer",
+            title: "Cache a hot read in Redis",
             type: "BUILD",
             content:
-              "Cache the listProjects query result in Redis with a 60-second TTL. Invalidate the cache key on any project mutation. Measure the latency delta.",
+              "Cache the curriculum/dashboard read in Redis with a short TTL; invalidate on mutation. Measure and log the latency delta.",
             resources: [],
           },
         ],
@@ -492,16 +691,19 @@ const curriculum: MonthSeed[] = [
             title: "Upstash Ratelimit",
             type: "READ",
             content:
-              "Learn Upstash rate limiting: sliding window algorithm, token bucket, fixed window. Understand how to choose the right strategy for different endpoints.",
+              "Sliding window, token bucket, fixed window — and choosing a strategy per endpoint.",
             resources: [
-              "https://upstash.com/docs/redis/sdks/ratelimit-ts/overview",
+              doc(
+                "Upstash Ratelimit",
+                "https://upstash.com/docs/redis/sdks/ratelimit-ts/overview"
+              ),
             ],
           },
           {
-            title: "Build Rate-Limited AI Endpoint",
+            title: "Rate-limit the tutor endpoint",
             type: "BUILD",
             content:
-              "Apply a sliding window rate limit to your AI assistant endpoint — 20 requests per user per minute. Return a typed error that the UI surfaces gracefully.",
+              "Apply a sliding-window limit to this app's /api/chat endpoint (e.g. 20 req/min) and surface a typed error gracefully in the UI.",
             resources: [],
           },
         ],
@@ -509,56 +711,59 @@ const curriculum: MonthSeed[] = [
     ],
   },
   {
-    id: 5,
+    id: 6,
     title: "BMad Spec-Driven Workflow + Advanced Agents",
     description:
-      "Apply BMad methodology in TypeScript and push the agent toward multi-step autonomous workflows.",
+      "Apply BMad in TypeScript and push the tutor toward Planner/Executor with memory and MCP.",
+    year: 2026,
+    month: 11,
     weeks: [
       {
         weekNum: 1,
-        title: "Spec-Driven Development in TS",
+        title: "Spec-Driven Development",
         topics: [
           {
             title: "Write a BMad Feature Spec",
             type: "EXERCISE",
             content:
-              "Write a full BMad spec for a new feature (sprint planning assistant) as a .md file. Define the problem, solution, data model changes, and API surface before writing any code.",
+              "Write a full BMad spec (.md) for a new feature of this app — e.g. a 'weekly review' assistant — defining problem, solution, data model changes, and API surface before any code.",
             resources: [],
           },
           {
-            title: "Derive Code from Spec",
+            title: "Derive Code from the Spec",
             type: "BUILD",
             content:
-              "Derive Zod schemas, Prisma models, and tRPC procedure signatures directly from your spec. The spec is the source of truth — code follows it.",
+              "Derive Zod schemas, Prisma models, and tRPC signatures directly from the spec. The spec is the source of truth.",
             resources: [],
           },
+          dsaTopic(
+            "Graphs, BFS/DFS",
+            "Adjacency lists, breadth-first and depth-first traversal."
+          ),
         ],
       },
       {
         weekNum: 2,
-        title: "Multi-Agent Patterns",
+        title: "Multi-Agent Patterns + MCP",
         topics: [
           {
-            title: "AI SDK Agents",
+            title: "Anthropic Tool Use + AI SDK Agents",
             type: "READ",
             content:
-              "Study agent patterns in the Vercel AI SDK: multi-step tool use, agent loops, and how to compose agents for complex workflows.",
-            resources: ["https://sdk.vercel.ai/docs/ai-sdk-core/agents"],
-          },
-          {
-            title: "Anthropic Tool Use",
-            type: "READ",
-            content:
-              "Learn Anthropic's tool use patterns: tool definitions, forced tool use, parallel tool calls, and best practices for reliable tool execution.",
+              "Tool definitions, forced/parallel tool use, agent loops. Donner's Agentic Track MCP section maps directly here — and back to the MCP server you tried in June.",
             resources: [
-              "https://docs.anthropic.com/en/docs/build-with-claude/tool-use",
+              doc(
+                "Anthropic — Tool use",
+                "https://docs.anthropic.com/en/docs/build-with-claude/tool-use"
+              ),
+              VID.agentic(),
             ],
           },
           {
-            title: "Build Planner/Executor Agents",
+            title: "Build Planner/Executor agents",
             type: "BUILD",
             content:
-              "Split your assistant into a Planner (interprets intent, produces structured plan) and an Executor (calls tools to carry out each step). Wire them in sequence.",
+              "Split the tutor into a Planner (interprets intent → structured plan) and an Executor (calls tools). Wire Planner output into Executor input.",
             resources: [],
           },
         ],
@@ -571,16 +776,19 @@ const curriculum: MonthSeed[] = [
             title: "Long Context Best Practices",
             type: "READ",
             content:
-              "Learn strategies for managing long conversations: context windowing, summarization of older turns, and techniques to stay within token limits while preserving important context.",
+              "Context windowing and summarising older turns to stay within token limits.",
             resources: [
-              "https://docs.anthropic.com/en/docs/build-with-claude/long-context-tips",
+              doc(
+                "Anthropic — Long context",
+                "https://docs.anthropic.com/en/docs/build-with-claude/long-context-tips"
+              ),
             ],
           },
           {
-            title: "Build Session Memory",
+            title: "Add session memory in Redis",
             type: "BUILD",
             content:
-              "Give your agent conversation history stored in Redis, keyed by session. Summarise older turns before injecting into context. The agent should remember earlier discussion.",
+              "Store tutor conversation history in Redis keyed by session; summarise older turns before injecting. The tutor should remember earlier discussion.",
             resources: [],
           },
         ],
@@ -593,16 +801,19 @@ const curriculum: MonthSeed[] = [
             title: "Prompt Engineering Overview",
             type: "READ",
             content:
-              "Study Anthropic's prompt engineering guide: system prompts, role prompting, chain-of-thought, few-shot examples, and XML tags for structure.",
+              "System prompts, role prompting, chain-of-thought, few-shot, XML structure.",
             resources: [
-              "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+              doc(
+                "Anthropic — Prompt engineering",
+                "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview"
+              ),
             ],
           },
           {
-            title: "Build Typed Prompt Templates",
+            title: "Type and version the prompt templates",
             type: "BUILD",
             content:
-              "Extract all system prompts into typed PromptTemplate functions that accept context params and return fully-formed prompts. Version them alongside your code.",
+              "Refactor this app's src/lib/ai/prompts.ts into typed PromptTemplate functions taking context params; version them alongside the features they serve.",
             resources: [],
           },
         ],
@@ -610,58 +821,105 @@ const curriculum: MonthSeed[] = [
     ],
   },
   {
-    id: 6,
+    id: 7,
+    title: "Buffer / Light Month (Holidays)",
+    description:
+      "December with three kids is chaos — this month is earned slack. Repay slipped weeks, keep DSA warm, rest.",
+    year: 2026,
+    month: 12,
+    isBuffer: true,
+    weeks: [
+      {
+        weekNum: 1,
+        title: "Catch-Up",
+        topics: [
+          {
+            title: "Repay slipped weeks",
+            type: "EXERCISE",
+            content:
+              "Finish anything from Jun–Nov that slipped. If you're ahead instead, get a head start on January's infra reading.",
+            resources: [],
+          },
+          dsaTopic(
+            "Dynamic programming (intro) + spaced review",
+            "Gentle DP intro (memoisation) plus a light review pass over earlier topics."
+          ),
+        ],
+      },
+      {
+        weekNum: 2,
+        title: "Rest + Light Review",
+        topics: [
+          {
+            title: "Spaced repetition pass",
+            type: "EXERCISE",
+            content:
+              "Skim notes and re-quiz yourself on the trickiest topics so far. Keep it light. Rest is part of the plan.",
+            resources: [],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 8,
     title: "Infra, CI/CD, and Production Hardening",
     description:
-      "Deploy to production with a professional-grade pipeline, observability, and environment management.",
+      "Deploy this app to production with a real pipeline, tests, and observability.",
+    year: 2027,
+    month: 1,
     weeks: [
       {
         weekNum: 1,
         title: "Vercel Deployment + Environments",
         topics: [
           {
-            title: "Vercel Projects and Deployments",
+            title: "Vercel Projects, Deployments & Env Vars",
             type: "READ",
             content:
-              "Learn Vercel deployment: project setup, build settings, deployment lifecycle, and how preview/production deployments work.",
-            resources: ["https://vercel.com/docs/deployments/overview"],
-          },
-          {
-            title: "Vercel Environment Variables",
-            type: "READ",
-            content:
-              "Understand Vercel environment management: dev/preview/production scopes, secret encryption, and how to wire different backends per environment.",
+              "Deployment lifecycle, preview vs prod, and env var scopes (dev/preview/prod) with secret encryption.",
             resources: [
-              "https://vercel.com/docs/projects/environment-variables",
+              doc("Vercel — Deployments", "https://vercel.com/docs/deployments/overview"),
+              doc(
+                "Vercel — Env vars",
+                "https://vercel.com/docs/projects/environment-variables"
+              ),
             ],
           },
           {
-            title: "Deploy to Vercel",
+            title: "Deploy this app to Vercel",
             type: "BUILD",
             content:
-              "Deploy to Vercel with three environments (dev/preview/prod). Configure separate Neon branches and Upstash instances per environment.",
+              "Deploy with three environments wired to separate Neon branches and Upstash instances. Preview deploys auto-wire to the dev Neon branch.",
             resources: [],
           },
+          dsaTopic(
+            "Sorting + searching",
+            "Merge/quick sort intuition and binary search variants."
+          ),
         ],
       },
       {
         weekNum: 2,
-        title: "GitHub Actions CI Pipeline",
+        title: "GitHub Actions CI",
         topics: [
           {
             title: "GitHub Actions Workflows",
             type: "READ",
             content:
-              "Learn GitHub Actions: workflow files, triggers, jobs, steps, matrix builds, caching, and how to compose reusable workflows.",
+              "Workflow files, triggers, jobs, steps, caching, reusable workflows.",
             resources: [
-              "https://docs.github.com/en/actions/writing-workflows",
+              doc(
+                "GitHub Actions — Workflows",
+                "https://docs.github.com/en/actions/writing-workflows"
+              ),
             ],
           },
           {
-            title: "Build CI Pipeline",
+            title: "Build the CI pipeline",
             type: "BUILD",
             content:
-              "Write a CI workflow: tsc --noEmit, ESLint, Prisma migration check, and test suite on every PR. Block merges to main on failure.",
+              "CI on every PR: tsc --noEmit, ESLint, prisma migrate diff, and the test suite. Block merges to main on failure.",
             resources: [],
           },
         ],
@@ -671,24 +929,20 @@ const curriculum: MonthSeed[] = [
         title: "Testing",
         topics: [
           {
-            title: "Vitest Guide",
+            title: "Vitest + Playwright",
             type: "READ",
             content:
-              "Learn Vitest: test syntax, matchers, mocking, setup/teardown, and how it integrates with TypeScript and ESM out of the box.",
-            resources: ["https://vitest.dev/guide/"],
+              "Vitest unit testing (with mocking) and Playwright e2e (locators, fixtures, assertions).",
+            resources: [
+              doc("Vitest", "https://vitest.dev/guide/"),
+              doc("Playwright", "https://playwright.dev/docs/intro"),
+            ],
           },
           {
-            title: "Playwright Getting Started",
-            type: "READ",
-            content:
-              "Learn Playwright: browser automation, locators, assertions, test fixtures, and how to write reliable end-to-end tests.",
-            resources: ["https://playwright.dev/docs/intro"],
-          },
-          {
-            title: "Write Unit and E2E Tests",
+            title: "Test this app",
             type: "BUILD",
             content:
-              "Unit test tRPC procedures with Vitest. Write Playwright e2e tests for project creation and the AI assistant tool-use flow.",
+              "Unit-test the tRPC procedures (mock Prisma) and write two Playwright e2e tests: completing a topic, and a tutor tool-use flow.",
             resources: [],
           },
         ],
@@ -698,26 +952,63 @@ const curriculum: MonthSeed[] = [
         title: "Observability and Error Handling",
         topics: [
           {
-            title: "Vercel Log Drains",
+            title: "Log Drains + OpenTelemetry",
             type: "READ",
             content:
-              "Learn Vercel observability: log drains, function logs, and how to pipe structured logs to external systems.",
-            resources: ["https://vercel.com/docs/observability/log-drains"],
-          },
-          {
-            title: "OpenTelemetry JS",
-            type: "READ",
-            content:
-              "Learn OpenTelemetry for Node.js: spans, traces, context propagation, and instrumentation of HTTP requests and database calls.",
+              "Vercel log drains and OpenTelemetry tracing (spans, context propagation, instrumentation).",
             resources: [
-              "https://opentelemetry.io/docs/languages/js/getting-started/nodejs/",
+              doc("Vercel — Log drains", "https://vercel.com/docs/observability/log-drains"),
+              doc(
+                "OpenTelemetry JS",
+                "https://opentelemetry.io/docs/languages/js/getting-started/nodejs/"
+              ),
             ],
           },
           {
-            title: "Build Observability Layer",
+            title: "Instrument the critical path",
             type: "BUILD",
             content:
-              "Add structured logging to all tRPC procedures and agent tool calls. Instrument story creation via agent with OpenTelemetry traces. Wire Sentry to the Next.js error boundary.",
+              "Add structured logging to procedures and tool calls, trace one critical path with OpenTelemetry, and wire Sentry to the Next.js error boundary.",
+            resources: [],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: 9,
+    title: "Consolidation + Portfolio",
+    description:
+      "Finish, document, and make this app demo-ready. Wrap DSA. Could you demo this in an interview tomorrow?",
+    year: 2027,
+    month: 2,
+    weeks: [
+      {
+        weekNum: 1,
+        title: "Polish the Artifact",
+        topics: [
+          {
+            title: "README, architecture diagram, demo",
+            type: "BUILD",
+            content:
+              "Write a strong README, draw the four-layer architecture diagram, and record a short demo. This is your portfolio piece — make it presentable.",
+            resources: [],
+          },
+          dsaTopic(
+            "DP consolidation + full review",
+            "Consolidate dynamic programming and do a spaced review across every earlier topic."
+          ),
+        ],
+      },
+      {
+        weekNum: 2,
+        title: "Retrospective + Next Steps",
+        topics: [
+          {
+            title: "Write a retrospective",
+            type: "EXERCISE",
+            content:
+              "Write a retro .md: what stuck, what you'd relearn, what's next. Celebrate — you shipped a full-stack AI app, earned AI-900, and built DSA fundamentals while raising three kids.",
             resources: [],
           },
         ],
@@ -726,59 +1017,134 @@ const curriculum: MonthSeed[] = [
   },
 ];
 
+// ---------------------------------------------------------------------------
+// Date helpers (UTC to keep @db.Date stable across time zones)
+// ---------------------------------------------------------------------------
+function utc(year: number, month1to12: number, day: number): Date {
+  return new Date(Date.UTC(year, month1to12 - 1, day));
+}
+function addDays(d: Date, days: number): Date {
+  const r = new Date(d);
+  r.setUTCDate(r.getUTCDate() + days);
+  return r;
+}
+function lastDayOfMonth(year: number, month1to12: number): number {
+  return new Date(Date.UTC(year, month1to12, 0)).getUTCDate();
+}
+
+const defaultPomodoros: Record<TopicType, number> = {
+  READ: 2,
+  BUILD: 3,
+  EXERCISE: 2,
+};
+
+// Weekday offsets within a Monday-anchored study week.
+// Core-ish work lands Mon/Wed/Fri/Sat; DSA lands Tue/Thu.
+const CORE_OFFSETS = [0, 2, 4, 5];
+const DSA_OFFSETS = [1, 3];
+
 async function main() {
-  console.log("Seeding curriculum data...");
+  console.log("Seeding extended 9-month curriculum (Jun 2026 → Feb 2027)…");
 
   for (const month of curriculum) {
+    const monthStart = utc(month.year, month.month, 1);
+    const monthEnd = utc(
+      month.year,
+      month.month,
+      lastDayOfMonth(month.year, month.month)
+    );
+
     await prisma.month.upsert({
       where: { id: month.id },
-      update: { title: month.title, description: month.description },
-      create: { id: month.id, title: month.title, description: month.description },
+      update: {
+        title: month.title,
+        description: month.description,
+        startDate: monthStart,
+        endDate: monthEnd,
+        isBuffer: month.isBuffer ?? false,
+      },
+      create: {
+        id: month.id,
+        title: month.title,
+        description: month.description,
+        startDate: monthStart,
+        endDate: monthEnd,
+        isBuffer: month.isBuffer ?? false,
+      },
     });
 
     for (const week of month.weeks) {
+      const weekStart = addDays(monthStart, (week.weekNum - 1) * 7);
+      let weekEnd = addDays(weekStart, 6);
+      if (weekEnd > monthEnd) weekEnd = monthEnd;
+
       const weekRecord = await prisma.week.upsert({
-        where: {
-          monthId_weekNum: { monthId: month.id, weekNum: week.weekNum },
-        },
-        update: { title: week.title },
+        where: { monthId_weekNum: { monthId: month.id, weekNum: week.weekNum } },
+        update: { title: week.title, startDate: weekStart, endDate: weekEnd },
         create: {
           monthId: month.id,
           weekNum: week.weekNum,
           title: week.title,
+          startDate: weekStart,
+          endDate: weekEnd,
         },
       });
 
+      let coreIdx = 0;
+      let dsaIdx = 0;
+
       for (let i = 0; i < week.topics.length; i++) {
         const topic = week.topics[i];
+        const track = topic.track ?? "CORE";
+
+        // Assign a concrete study day within the week.
+        let offset: number;
+        if (track === "DSA") {
+          offset = DSA_OFFSETS[dsaIdx % DSA_OFFSETS.length];
+          dsaIdx++;
+        } else {
+          offset = CORE_OFFSETS[coreIdx % CORE_OFFSETS.length];
+          coreIdx++;
+        }
+        let scheduledDate = addDays(weekStart, offset);
+        if (scheduledDate > monthEnd) scheduledDate = monthEnd;
+
+        const data = {
+          title: topic.title,
+          type: topic.type,
+          track,
+          content: topic.content,
+          scheduledDate,
+          estimatedPomodoros: defaultPomodoros[topic.type],
+        };
+
         const existing = await prisma.topic.findUnique({
           where: { weekId_sortOrder: { weekId: weekRecord.id, sortOrder: i + 1 } },
         });
 
+        let topicId: number;
         if (existing) {
-          await prisma.topic.update({
-            where: { id: existing.id },
-            data: {
-              title: topic.title,
-              type: topic.type,
-              content: topic.content,
-              resources: topic.resources,
-            },
-          });
+          await prisma.topic.update({ where: { id: existing.id }, data });
+          topicId = existing.id;
+          // Replace resources to stay idempotent.
+          await prisma.resource.deleteMany({ where: { topicId } });
         } else {
           const created = await prisma.topic.create({
-            data: {
-              weekId: weekRecord.id,
-              sortOrder: i + 1,
-              title: topic.title,
-              type: topic.type,
-              content: topic.content,
-              resources: topic.resources,
-            },
+            data: { ...data, weekId: weekRecord.id, sortOrder: i + 1 },
           });
+          topicId = created.id;
+          await prisma.topicProgress.create({ data: { topicId } });
+        }
 
-          await prisma.topicProgress.create({
-            data: { topicId: created.id },
+        if (topic.resources && topic.resources.length > 0) {
+          await prisma.resource.createMany({
+            data: topic.resources.map((r) => ({
+              topicId,
+              type: r.type,
+              label: r.label,
+              url: r.url ?? null,
+              source: r.source ?? null,
+            })),
           });
         }
       }

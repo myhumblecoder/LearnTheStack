@@ -4,24 +4,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**LearnTheStack** is a self-directed 6-month curriculum to master a modern full-stack TypeScript architecture by building a single real application: an **AI-powered project tracker**. The project is docs-first — specs and schemas drive implementation, not the other way around.
+**LearnTheStack** is a self-directed full-stack TypeScript mastery curriculum **and** the real application it produces: an **AI-powered study tracker** for the curriculum itself. The app is the thing you learn on — you deepen each layer of the stack by extending it. The project is docs-first — specs and schemas drive implementation, not the other way around.
 
-No code exists yet. Start from `docs/studyplan.md` to understand where in the curriculum work should begin.
+The curriculum has been extended to a **9-month plan (Jun 2026 → Feb 2027)** covering the core stack plus three added tracks (Claude Code, Azure AI-900, DSA). See `docs/studyplan-extended.md` for the dated plan and `docs/studyplan.md` for the original 6-month spine.
+
+The app already exists and runs. Key surfaces: a dashboard, daily/weekly/monthly schedule views (`/today`, `/week`, `/month`), an AI tutor chat per topic, quizzes, code review, and a pomodoro timer in the header that logs focused sessions.
 
 ## Build Commands
 
-> These will apply once the project is scaffolded (Month 1). Standard Next.js conventions are expected:
-
 ```bash
-npm run dev          # Start development server
+npm run dev          # Start development server (Next.js)
 npm run build        # Production build
 npm run lint         # ESLint
 npx tsc --noEmit     # Type check without emitting
-npx prisma migrate dev   # Run migrations locally
-npx prisma generate      # Regenerate Prisma client after schema changes
-npx vitest           # Unit tests
-npx playwright test  # E2E tests
+npm run db:migrate   # prisma migrate dev — run migrations locally
+npm run db:seed      # tsx prisma/seed.ts — load the 9-month curriculum
+npm run db:reset     # prisma migrate reset --force — wipe + re-migrate
+npm run db:studio    # Prisma Studio
+npx prisma generate  # Regenerate Prisma client after schema changes (no DB needed)
 ```
+
+Local Postgres runs via `docker-compose up -d db` (see `docker-compose.yml`). The Prisma client is generated to `src/generated/prisma`.
 
 ## Architecture
 
@@ -44,7 +47,15 @@ Data Layer       → Prisma ORM → PostgreSQL (Neon) + Redis (Upstash)
 
 ## Domain Model
 
-The application manages: `Project` → `Epic` → `Story` (hierarchical). This model is introduced in Month 2 via Prisma schema and persists through all subsequent months.
+The application models the curriculum itself: `Month` → `Week` → `Topic` (hierarchical). Supporting models:
+- `TopicProgress` — per-topic status (NOT_STARTED → IN_PROGRESS → QUIZ_PENDING → COMPLETED)
+- `Resource` — typed study resources (DOC / VIDEO / TEXTBOOK) attached to a topic
+- `Track` enum on `Topic` — CORE / DSA / AZURE / CLAUDE_CODE (the four study tracks)
+- `Topic.scheduledDate` + `Month`/`Week` `startDate`/`endDate` — the calendar that powers the daily/weekly/monthly views; `Month.isBuffer` flags the December slack month
+- `StudySession` — pomodoro sessions (`pomodoros`, `totalMinutes`, optional `topicId`)
+- `QuizAttempt`, `ChatMessage`, `MessageFeedback` — quizzes and AI tutor chat with thumbs up/down
+
+The seed (`prisma/seed.ts`) loads the full dated 9-month curriculum; it computes week and topic dates from each month's calendar start. Schedule queries live in `src/lib/curriculum/schedule.ts`.
 
 ## Environment Setup
 

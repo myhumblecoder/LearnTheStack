@@ -59,7 +59,9 @@ export async function POST(req: Request) {
         topicTitle: topic.title,
         topicContent: topic.content,
         topicType: topic.type,
-        resources: topic.resources,
+        resources: topic.resources.map((r) =>
+          r.url ? `${r.label} — ${r.url}` : r.label
+        ),
         completedTopics: completedTopics.map(
           (t: { title: string }) => t.title
         ),
