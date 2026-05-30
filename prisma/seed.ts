@@ -80,14 +80,32 @@ const doc = (label: string, url: string): ResourceSeed => ({
   url,
 });
 
-// A standard monthly DSA topic, parameterised by focus.
-function dsaTopic(focus: string, practice: string): TopicSeed {
+// O'Reilly Learning textbook (the user has a subscription covering any title).
+const oreilly = (title: string, author: string): ResourceSeed => ({
+  type: "TEXTBOOK",
+  label: title,
+  source: `${author} · O'Reilly Learning`,
+});
+
+// Skiena, "The Algorithm Design Manual" — the user's owned DSA reference.
+const skiena = (chapters: string): ResourceSeed => ({
+  type: "TEXTBOOK",
+  label: `The Algorithm Design Manual — ${chapters}`,
+  source: "Steven Skiena · 3rd ed. (2020)",
+});
+
+// A standard monthly DSA topic, parameterised by focus and its Skiena chapters.
+function dsaTopic(
+  focus: string,
+  practice: string,
+  skienaChapters: string
+): TopicSeed {
   return {
     title: `DSA: ${focus}`,
     type: "EXERCISE",
     track: "DSA",
-    content: `Steady fundamentals track (no deadline). This month: ${focus}. Aim for ~2 problems/week, written in TypeScript so it reinforces the stack work. ${practice} Use the video for theory and any judge (LeetCode/Exercism) for reps. Log solutions in your personal algorithms/ repo.`,
-    resources: [VID.dsa()],
+    content: `Steady fundamentals track (no deadline). This month: ${focus}. Aim for ~2 problems/week, written in TypeScript so it reinforces the stack work. ${practice} Use the video for theory, Skiena for depth, and any judge (LeetCode/Exercism) for reps. Log solutions in your personal algorithms/ repo.`,
+    resources: [VID.dsa(), skiena(skienaChapters)],
   };
 }
 
@@ -186,6 +204,7 @@ const curriculum: MonthSeed[] = [
                 "https://www.typescriptlang.org/docs/handbook/2/generics.html"
               ),
               VID.tsGrider(),
+              oreilly("Programming TypeScript", "Boris Cherny"),
             ],
           },
           {
@@ -237,7 +256,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Big-O, arrays, strings, hash maps",
-            "Start with Big-O intuition, then array/string traversal and hash-map lookups."
+            "Start with Big-O intuition, then array/string traversal and hash-map lookups.",
+            "ch. 1–2 (intro & algorithm analysis), 6 (hashing)"
           ),
         ],
       },
@@ -265,6 +285,7 @@ const curriculum: MonthSeed[] = [
                 "Prisma — Data model",
                 "https://www.prisma.io/docs/orm/prisma-schema/data-model"
               ),
+              oreilly("Designing Data-Intensive Applications", "Martin Kleppmann"),
             ],
           },
           {
@@ -285,7 +306,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Two pointers, sliding window",
-            "Classic patterns for array/string subranges."
+            "Classic patterns for array/string subranges.",
+            "ch. 3 (data structures — arrays & sequences)"
           ),
         ],
       },
@@ -407,7 +429,10 @@ const curriculum: MonthSeed[] = [
             type: "READ",
             content:
               "Learn the Vercel AI SDK architecture: providers, generateText/streamText, the unified interface. This app uses ai v6 + @ai-sdk/anthropic — see src/lib/ai/tutor.ts.",
-            resources: [doc("Vercel AI SDK", "https://sdk.vercel.ai/docs/introduction")],
+            resources: [
+              doc("Vercel AI SDK", "https://sdk.vercel.ai/docs/introduction"),
+              oreilly("AI Engineering", "Chip Huyen"),
+            ],
           },
           {
             title: "streamText and generateText",
@@ -423,7 +448,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Stacks, queues, linked lists",
-            "Pointer manipulation and LIFO/FIFO structures."
+            "Pointer manipulation and LIFO/FIFO structures.",
+            "ch. 3 (data structures — stacks, queues, linked lists)"
           ),
         ],
       },
@@ -537,7 +563,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Recursion (light — cert month)",
-            "Keep it light this month; just recursion intuition and a couple of problems."
+            "Keep it light this month; just recursion intuition and a couple of problems.",
+            "ch. 5 (divide & conquer) & 9 (combinatorial search — backtracking)"
           ),
         ],
       },
@@ -637,7 +664,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Trees + binary search trees",
-            "Tree traversal (in/pre/post-order) and BST operations."
+            "Tree traversal (in/pre/post-order) and BST operations.",
+            "ch. 3 (data structures — binary search trees)"
           ),
         ],
       },
@@ -738,7 +766,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Graphs, BFS/DFS",
-            "Adjacency lists, breadth-first and depth-first traversal."
+            "Adjacency lists, breadth-first and depth-first traversal.",
+            "ch. 7 (graph traversal — BFS/DFS) & 8 (weighted graphs)"
           ),
         ],
       },
@@ -842,7 +871,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Dynamic programming (intro) + spaced review",
-            "Gentle DP intro (memoisation) plus a light review pass over earlier topics."
+            "Gentle DP intro (memoisation) plus a light review pass over earlier topics.",
+            "ch. 10 (dynamic programming — intro)"
           ),
         ],
       },
@@ -895,7 +925,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "Sorting + searching",
-            "Merge/quick sort intuition and binary search variants."
+            "Merge/quick sort intuition and binary search variants.",
+            "ch. 4 (sorting & binary search)"
           ),
         ],
       },
@@ -996,7 +1027,8 @@ const curriculum: MonthSeed[] = [
           },
           dsaTopic(
             "DP consolidation + full review",
-            "Consolidate dynamic programming and do a spaced review across every earlier topic."
+            "Consolidate dynamic programming and do a spaced review across every earlier topic.",
+            "ch. 10 (dynamic programming) + Part II catalog (ch. 13–22)"
           ),
         ],
       },

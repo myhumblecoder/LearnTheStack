@@ -47,11 +47,19 @@ The bookmark table in [`studyplan.md`](./studyplan.md#reference-key-docs-bookmar
 TypeScript, Zod, Prisma, Neon, Vercel AI SDK, Anthropic, tRPC, Upstash, Vercel, GitHub Actions,
 Vitest, Playwright. Plus [Microsoft Learn — AI-900](https://learn.microsoft.com/credentials/certifications/azure-ai-fundamentals/) for the cert.
 
-### 📚 Textbooks (you tell me)
-> _Add the titles you own and I'll slot them into the relevant months. Likely candidates given
-> the stack: a TypeScript reference (e.g. *Programming TypeScript*), a DSA text (e.g. *Grokking
-> Algorithms* or *The Algorithm Design Manual*), a systems/AI text. **Tell me what's on your
-> shelf and I'll wire each chapter to a week.**_
+### 📚 Textbooks
+
+| Book | Author | Access | Used in |
+|---|---|---|---|
+| The Algorithm Design Manual (3rd ed., 2020) | Steven Skiena | Owned | DSA track — chapters mapped per month |
+| Programming TypeScript | Boris Cherny | O'Reilly Learning | Jun (M1) — TS at depth |
+| Designing Data-Intensive Applications | Martin Kleppmann | O'Reilly Learning | Jul (M2) — data layer |
+| AI Engineering | Chip Huyen | O'Reilly Learning | Aug (M3) — agent layer |
+
+You have an **O'Reilly Learning** subscription, so any title above (or another that fits a
+month) is available on demand. **Skiena** is the spine of the DSA track — each monthly `DSA:`
+topic in the app cites the relevant Skiena chapters (3rd ed.; e.g. ch. 7 for graph traversal,
+ch. 10 for dynamic programming).
 
 ---
 
