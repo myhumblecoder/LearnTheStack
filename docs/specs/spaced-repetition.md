@@ -38,7 +38,9 @@ review"** surface that links back into it. No new quiz UI or AI changes.
 | 5 (max) | +120 days |
 
 - First pass → complete the topic, enter at **stage 1** (`nextReviewAt = today + 3d`).
-- Review pass → advance one stage (capped at 5).
+- Pass while the review is **due** (`nextReviewAt <= today`) → advance one stage (capped at 5).
+- Pass while **not yet due** → no change. Re-taking a quiz early must not fast-forward the
+  ladder, or you could climb 3d→7d→21d in minutes and lose all spacing benefit.
 - Review fail → drop one stage (floored at 1), resurface sooner.
 - A failed quiz on a not-yet-completed topic changes nothing.
 
@@ -76,9 +78,10 @@ nextReviewAt DateTime? @db.Date       // null = nothing scheduled
 1. First pass sets `reviewStage = 1`, `nextReviewAt = today + 3d`.
 2. A topic with `nextReviewAt <= today` appears in "Due for review" on `/today` and the dashboard.
 3. Re-passing a due review advances the stage and pushes `nextReviewAt` out.
-4. Failing a review drops the stage (min 1) and brings `nextReviewAt` closer.
-5. Nothing due → the section renders nothing.
-6. `tsc --noEmit` and ESLint clean; first-pass completion behavior unchanged.
+4. Re-passing a review that is **not yet due** leaves stage and `nextReviewAt` unchanged.
+5. Failing a review drops the stage (min 1) and brings `nextReviewAt` closer.
+6. Nothing due → the section renders nothing.
+7. `tsc --noEmit` and ESLint clean; first-pass completion behavior unchanged.
 
 ## Future (out of scope)
 

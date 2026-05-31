@@ -13,30 +13,40 @@ export function intervalForStage(stage: number): number {
 /**
  * Update a topic's review schedule after a quiz attempt.
  * - first entry (stage 0) + pass → stage 1
- * - pass → advance one stage (capped at MAX_STAGE)
+ * - pass while the review is DUE → advance one stage (capped at MAX_STAGE)
+ * - pass while NOT yet due → no change (re-taking early doesn't fast-forward
+ *   the ladder; that would defeat spacing)
  * - fail → drop one stage (floored at 1)
- * A fail at stage 0 (topic not yet completed) is a no-op.
+ * A fail at stage 0 (topic not yet in the ladder) is a no-op.
+ *
+ * Uses upsert so the helper is safe to call even if no TopicProgress row
+ * exists yet (matches the pattern in src/actions/progress.ts).
  */
 export async function scheduleReview(topicId: number, passed: boolean) {
   const progress = await prisma.topicProgress.findUnique({ where: { topicId } });
   const current = progress?.reviewStage ?? 0;
+  const today = todayUtc();
 
   let stage: number;
   if (current === 0) {
     if (!passed) return; // not in the ladder yet, failed → nothing to schedule
     stage = 1;
+  } else if (passed) {
+    const due =
+      progress?.nextReviewAt != null &&
+      startOfUtcDay(progress.nextReviewAt).getTime() <= today.getTime();
+    if (!due) return; // re-passed before it was due → don't advance the ladder
+    stage = Math.min(current + 1, MAX_STAGE);
   } else {
-    stage = passed
-      ? Math.min(current + 1, MAX_STAGE)
-      : Math.max(current - 1, 1);
+    stage = Math.max(current - 1, 1); // fail drops a stage regardless of due-ness
   }
 
-  await prisma.topicProgress.update({
+  const nextReviewAt = addDays(today, intervalForStage(stage));
+
+  await prisma.topicProgress.upsert({
     where: { topicId },
-    data: {
-      reviewStage: stage,
-      nextReviewAt: addDays(todayUtc(), intervalForStage(stage)),
-    },
+    update: { reviewStage: stage, nextReviewAt },
+    create: { topicId, reviewStage: stage, nextReviewAt },
   });
 }
 
